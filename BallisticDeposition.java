@@ -1,3 +1,14 @@
+/*
+######################################
+BallisticDeposition.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+A re-implementation of a well known
+surface deposition model based on
+the bonding of atoms. 
+######################################
+*/
 package ch13;
 
 public class BallisticDeposition extends Deposition {

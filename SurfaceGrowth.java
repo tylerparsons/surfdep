@@ -1,3 +1,14 @@
+/*
+######################################
+SurfaceGrowth.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+A runnable class that manages instant-
+iation of models, visualization, data 
+analysis, UI and I/O of parameters.
+######################################
+*/
 package ch13;
 
 import org.opensourcephysics.controls.AbstractSimulation;
@@ -42,9 +53,9 @@ public class SurfaceGrowth extends AbstractSimulation {
 		width_vs_length.setAutoscaleY(true);
 		
 		dataManager = new DepositionDataManager(
-			"data/logFile.txt",
-			"data/data.txt",
-			"data/data.csv"
+			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\id_log.txt",
+			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\deposition_data.txt",
+			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\deposition_data.csv"
 		);
 		dataManager.startTrial();
 	}
@@ -151,11 +162,11 @@ public class SurfaceGrowth extends AbstractSimulation {
 		
 		//Save, display data
 		if (control.getBoolean("Save Data")) {
-			dataManager.saveToTxt(model, /*t_cross1, alpha, beta_avg,*/ addlParams);
+			dataManager.saveToTxt(model, addlParams);
 			dataManager.saveToCSV(model, addlParams);
-			String description = "L"+model.getLength()+"H"+model.getHeight();
-			dataManager.saveImage(lattice, "lattices", description + ".jpeg");
-			dataManager.saveImage(width_vs_time, "plots", description + ".jpeg");
+			String fileName = "L"+model.getLength()+"H"+model.getHeight();
+			dataManager.saveImage(lattice, "lattices", fileName + ".jpeg");
+			dataManager.saveImage(width_vs_time, "plots", fileName + ".jpeg");
 		}
 		if (control.getBoolean("Plot All")) {
 			plotAll();
@@ -188,7 +199,6 @@ public class SurfaceGrowth extends AbstractSimulation {
 		};
 		//Pass functions to regression
 		lnw_vs_lnL = new LinearRegression(lnL, lnw_avg, 0, (double)models.size()-1, 1);
-		//width_vs_length.addDrawable(lnw_vs_lnL);
 		return lnw_vs_lnL.m();
 	}
 	
@@ -235,15 +245,6 @@ public class SurfaceGrowth extends AbstractSimulation {
 	 * 		-> runs linear regression for alpha
 	 * 
 	 * */
-	private Color[] colors = {Color.CYAN,
-							  Color.ORANGE,
-							  Color.MAGENTA,
-							  Color.PINK,
-							  Color.YELLOW,
-							  Color.RED,
-							  Color.GREEN,
-							  Color.BLUE};
-	
 	private void plotAll() {
 		
 		// width_vs_time
@@ -271,6 +272,16 @@ public class SurfaceGrowth extends AbstractSimulation {
 		// Draw linear regression
 		width_vs_length.addDrawable(lnw_vs_lnL);
 	}
+	
+	//Rotating color palette for plotting models
+	private Color[] colors = {Color.CYAN,
+							  Color.ORANGE,
+							  Color.MAGENTA,
+							  Color.PINK,
+							  Color.YELLOW,
+							  Color.RED,
+							  Color.GREEN,
+							  Color.BLUE};
 	
 	
 /********

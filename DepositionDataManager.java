@@ -1,3 +1,16 @@
+/*
+######################################
+DepositionDataManager.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+A class that manages the recording of 
+simulation data. Automatically creates 
+a file system to store data, outputs 
+numerical values and saves images with
+file I/O.
+######################################
+*/
 package ch13;
 
 import java.io.File;

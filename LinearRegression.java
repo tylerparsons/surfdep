@@ -1,3 +1,16 @@
+/*
+######################################
+LinearRegression.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+A class that creates a simple linear 
+regression given a function definition.
+Uses wrapper interface Function to ana-
+lyze continuous and constant functions,
+and arrays.
+######################################
+*/
 package ch13;
 
 import java.awt.Color;

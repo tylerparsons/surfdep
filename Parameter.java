@@ -1,3 +1,14 @@
+/*
+######################################
+Parameter.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+A class used to wrap numerical values
+along with their associated names for
+easy access and storage.
+######################################
+*/
 package ch13;
 
 public class Parameter {

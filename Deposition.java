@@ -1,3 +1,15 @@
+/*
+######################################
+Deposition.java
+@author		Tyler Parsons
+@created	7 May 2014
+ 
+An abstract superclass of deposition
+models. Provides support for model im-
+plementation, visualization and stati-
+stical analysis.
+######################################
+*/
 package ch13;
 
 import java.awt.Color;
@@ -13,17 +25,7 @@ import ch13.Parameter;
 
 
 public abstract class Deposition implements Drawable {
-	
-/******************
- * Nested Classes *
- ******************/
 
-	public class Point {
-		public int x;
-		public int y;
-	}
-	
-	
 /************************************
  * Implementation of Physical Model *
  ************************************/
@@ -232,6 +234,16 @@ public abstract class Deposition implements Drawable {
 		return scalar!=0 ? scalar : 1;
 	}
 	
+	
+/******************
+ * Nested Classes *
+ ******************/
+
+	public class Point {
+		public int x;
+		public int y;
+	}
+
 	
 /***********
  * Getters *

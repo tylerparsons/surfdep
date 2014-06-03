@@ -24,6 +24,28 @@ import java.util.ArrayList;
 
 import java.util.Scanner;
 
+/*
+ * To Do:
+ * 
+ * - Develop way to increase space efficiency
+ * 		- Not necessary to save entire lattice
+ * 		- Implement a smaller byte[][], ~ L*100
+ * 		- When a column overflows, start reusing
+ * 		  the bottom row (after clearing it)
+ * 			- Track max height (change calculateAverageHeight
+ * 			  to analyzeHeight, update averageHeight and maxheight)
+ * 			- every time a new maxHeight is reached, clear
+ * 			  byte[maxHeight%H]
+ * 				- only do this when maxHeight changes
+ * 					e.g. not when two sites share maxHeight
+ * 		- h[i] remains, the same, position in lattice
+ * 		  becomes lattice[h[i]%H][i]
+ * - Multithreading
+ * 		- Would allow for use of entire cpu
+ * 		- Multithread up to 4 separate models?
+ * 			- less space efficient, but easier to implement
+ * 			- still useful
+ */
 public class SurfaceGrowth extends AbstractSimulation {
 
 	private LatticeFrame lattice;
@@ -64,7 +86,8 @@ public class SurfaceGrowth extends AbstractSimulation {
 		//Create a new model for each simulation
 		model = new BallisticDiffusionModel();
 		lattice.clearDrawables();
-		lattice.addDrawable(model);
+		lattice.setVisible(false);
+		width_vs_length.setVisible(false);
 		
 		//Set Parameters
 		ArrayList<Parameter> params = model.parameters();
@@ -73,12 +96,16 @@ public class SurfaceGrowth extends AbstractSimulation {
 			p = params.get(i);
 			p.value = control.getDouble(p.name);
 		}
-		
 		model.init();
 		
-		lattice.setPreferredMinMax( 0, model.getLength()*model.getXSpacing(),
-									0, model.getHeight()*model.getYSpacing());
-		width_vs_length.setVisible(false);
+		if (control.getBoolean("Enable Visualizations")) {
+			lattice.addDrawable(model);
+			lattice.setVisible(true);
+			lattice.setPreferredMinMax(
+				0, model.getLength()*model.getXSpacing(),
+				0, model.getHeight()*model.getYSpacing()
+			);
+		}		
 	}
 	
 	
@@ -97,6 +124,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 		//Control Values
 		control.setValue("Save Data", true);
 		control.setValue("Plot All", false);
+		control.setValue("Enable Visualizations", false);
 		enableStepsPerDisplay(true);
 	}
 	
@@ -106,16 +134,20 @@ public class SurfaceGrowth extends AbstractSimulation {
  ****************/
 	
 	protected void doStep() {
+		if(model.getAverageHeight() > 0.9*model.getHeight()) {
+			stopSimulation();
+			return;
+		}
 		try {
 			model.step();
 		} catch(ArrayIndexOutOfBoundsException e) {
-			stop();
+			stopSimulation();
 			return;
 		}
 		int time = model.getTime();
 		if(time%pointModulus(time) == 0) {
 			width_vs_time.append(model.getLength(), Math.log(time),
-					 Math.log(model.getWidth(time)));
+								 Math.log(model.getWidth(time)));
 		}
 	}
 	
@@ -143,7 +175,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 		
 		//Wrap data in Parameters to pass to dataManager as list
 		ArrayList<Parameter> addlParams = new ArrayList<Parameter>();
-		addlParams.add(new Parameter("averageHeight", model.averageHeight()));
+		addlParams.add(new Parameter("averageHeight", model.getAverageHeight()));
 		addlParams.add(new Parameter("width", model.getWidth(model.getTime())));
 		addlParams.add(new Parameter("numsteps", model.getTime()));
 		addlParams.add(new Parameter("t_cross1", t_cross1));
@@ -226,7 +258,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 	 * */
 	final static int N_max = 10000;
 	final static int mod_max = 10000;
-	
+
 	private int pointModulus(int t) {
 		if (t > N_max*((int)(Math.log(mod_max))))
 			return mod_max;
@@ -255,7 +287,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 			width_vs_time.setMarkerColor(i, colors[i%colors.length]);
 			int time = m.getTime();
 			for (int t = 1; t <= time; t++) {
-				int mod = pointModulus(t)*models.size();
+				long mod = pointModulus(t)*models.size();
 				if (t % mod == 0) {
 					width_vs_time.append(i, Math.log(t),
 							 Math.log(m.getWidth(t)));
@@ -273,7 +305,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 		width_vs_length.addDrawable(lnw_vs_lnL);
 	}
 	
-	//Rotating color palette for plotting models
+	// Color palette for plotting models
 	private Color[] colors = {Color.CYAN,
 							  Color.ORANGE,
 							  Color.MAGENTA,

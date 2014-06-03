@@ -14,12 +14,12 @@ package ch13;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.lang.Math;
+import java.util.ArrayList;
 
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
-import java.lang.Math;
-import java.util.ArrayList;
 import ch13.LinearRegression.Function;
 import ch13.Parameter;
 
@@ -30,11 +30,12 @@ public abstract class Deposition implements Drawable {
  * Implementation of Physical Model *
  ************************************/
 	
+	protected int L;	//length
+	protected int H;	//max height
 	protected byte[][] lattice;
 	protected double[] width;
 	protected int[] height;
-	protected int L;	//length
-	protected int H;	//max height
+	protected double averageHeight;
 	protected int time;	//measured in steps
 	protected int Max_Steps;
 	
@@ -74,6 +75,7 @@ public abstract class Deposition implements Drawable {
 	public void step() {
 		time++;
 		// Calculate and store snapshot of system after each step
+		calculateAverageHeight();
 		width[time] = width();
 	}
 	
@@ -178,19 +180,18 @@ public abstract class Deposition implements Drawable {
 	}
 	
 	// Average column height
-	public double averageHeight() {
+	public void calculateAverageHeight() {
 		int sum = 0;
 		for (int i = 0; i < L; i++)
 			sum += height[i];
-		return ((double)sum)/((double)L);
+		averageHeight = ((double)sum)/((double)L);
 	}
 	
 	// Instantaneous "width" of the surface
 	public double width() {
-		double h_avg = averageHeight();
 		double sum = 0;
 		for (int i = 0; i < L; i++)
-			sum += (height[i]-h_avg)*(height[i]-h_avg);
+			sum += (height[i]-averageHeight)*(height[i]-averageHeight);
 		return Math.sqrt(sum/(double)L);
 	}
 	
@@ -257,6 +258,7 @@ public abstract class Deposition implements Drawable {
 	public double getWidth(int t)				{return width[t];}
 	public double getAtomicLength()				{return atomicLength;}
 	public double getAtomicHeight()				{return atomicHeight;}
+	public double getAverageHeight()			{return averageHeight;}
 	public double getXSpacing()					{return xSpacing;}
 	public double getYSpacing()					{return ySpacing;}
 	public ArrayList<Parameter> parameters()	{return parameters;}

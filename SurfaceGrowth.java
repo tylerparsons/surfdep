@@ -24,28 +24,7 @@ import java.util.ArrayList;
 
 import java.util.Scanner;
 
-/*
- * To Do:
- * 
- * - Develop way to increase space efficiency
- * 		- Not necessary to save entire lattice
- * 		- Implement a smaller byte[][], ~ L*100
- * 		- When a column overflows, start reusing
- * 		  the bottom row (after clearing it)
- * 			- Track max height (change calculateAverageHeight
- * 			  to analyzeHeight, update averageHeight and maxheight)
- * 			- every time a new maxHeight is reached, clear
- * 			  byte[maxHeight%H]
- * 				- only do this when maxHeight changes
- * 					e.g. not when two sites share maxHeight
- * 		- h[i] remains, the same, position in lattice
- * 		  becomes lattice[h[i]%H][i]
- * - Multithreading
- * 		- Would allow for use of entire cpu
- * 		- Multithread up to 4 separate models?
- * 			- less space efficient, but easier to implement
- * 			- still useful
- */
+
 public class SurfaceGrowth extends AbstractSimulation {
 
 	private LatticeFrame lattice;

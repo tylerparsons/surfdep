@@ -35,7 +35,7 @@ public class LinearRegression implements Drawable{
  * Regression for Continuous Functions *
  ***************************************/	
 	
-	/*
+	/**
 	 * Creates a linear regression of the given representation of a function
 	 * @param f - independent variable
 	 * @param g - dependent variable
@@ -70,7 +70,7 @@ public class LinearRegression implements Drawable{
 		for (double x = x1; x <= x2; x += dx) {
 			f_x = f.val(x);
 			if (!Double.isInfinite(f_x)) {
-				sum += f.val(x);
+				sum += f_x;
 				ctr++;
 			}
 		}

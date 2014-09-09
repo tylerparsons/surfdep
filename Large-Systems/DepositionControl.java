@@ -1,6 +1,6 @@
 /*
 ######################################
-SurfaceGrowth.java
+DepositionControl.java
 @author		Tyler Parsons
 @created	7 May 2014
  
@@ -11,19 +11,17 @@ analysis, UI and I/O of parameters.
 */
 package ch13;
 
-import org.opensourcephysics.controls.AbstractSimulation;
-import org.opensourcephysics.controls.SimulationControl;
-
-import org.opensourcephysics.frames.PlotFrame;
-import org.opensourcephysics.frames.LatticeFrame;
-import java.awt.Color;
-
-import ch13.Parameter;
+import ch13.EmbeddedDBArray.DBOperationCallback;
 import ch13.LinearRegression.Function;
+
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import java.util.Scanner;
+import org.opensourcephysics.controls.AbstractSimulation;
+import org.opensourcephysics.controls.SimulationControl;
+import org.opensourcephysics.frames.PlotFrame;
+import org.opensourcephysics.frames.LatticeFrame;
 
 /*
  * To Do:
@@ -47,7 +45,7 @@ import java.util.Scanner;
  * 			- less space efficient, but easier to implement
  * 			- still useful
  */
-public class SurfaceGrowth extends AbstractSimulation {
+public class DepositionControl extends AbstractSimulation {
 
 	private LatticeFrame lattice;
 	private PlotFrame width_vs_time, width_vs_length;
@@ -61,7 +59,7 @@ public class SurfaceGrowth extends AbstractSimulation {
  * Initialization Methods *
  **************************/
 	
-	public SurfaceGrowth() {
+	public DepositionControl() {
 		
 		//set up visualizations
 		model = new BallisticDiffusionModel();
@@ -97,6 +95,9 @@ public class SurfaceGrowth extends AbstractSimulation {
 		}
 		model.init(params);
 		
+		// Enable database operation alerts
+		model.registerDBOperationCallbacks(onPush, onPull);
+		
 		if (control.getBoolean("Enable Visualizations")) {
 			lattice.addDrawable(model);
 			lattice.setVisible(true);
@@ -119,7 +120,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 			control.setValue(name, params.get(name));
 		}
 		//Control Values
-		control.setValue("Save Data", false);
+		control.setValue("Save Data", true);
 		control.setValue("Plot All", false);
 		control.setValue("Enable Visualizations", true);
 		enableStepsPerDisplay(true);
@@ -142,8 +143,9 @@ public class SurfaceGrowth extends AbstractSimulation {
 			stopSimulation();
 			return;
 		}
-		int time = model.getTime();
-		if(time%pointModulus(time) == 0) {
+		long time = model.getTime();
+		long mod = pointModulus(time);
+		if(time%mod == 0) {
 			width_vs_time.append(model.getLength(), Math.log(time),
 								 Math.log(model.getWidth(time)));
 		}
@@ -155,15 +157,27 @@ public class SurfaceGrowth extends AbstractSimulation {
 		if (!exists(model))
 			models.add(model);
 		
-		//Estimate t_cross
-		Scanner in = new Scanner(System.in);
-		System.out.println("Define regions over which to run the regression:");
-		System.out.print("ln(t_0) = ");
-		int t_0 = (int)Math.exp(in.nextDouble());
-		System.out.print("ln(t_cross1) = ");
-		int t_cross1 = (int)Math.exp(in.nextDouble());
-		System.out.print("ln(t_cross2) = ");
-		int t_cross2 = (int)Math.exp(in.nextDouble());
+		//Request input of t_cross and implement input callback
+		//to analyze model
+		
+		new TCrossInputDialog(new TCrossInputDialog.InputHandler() {
+
+			@Override
+			public void onInputReceived(HashMap<String, Double> input) {
+				analyzeModel(
+					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_0).doubleValue()),
+					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_CROSS1).doubleValue()),
+					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_CROSS2).doubleValue())
+				);
+				
+			}
+			
+		});
+		
+		
+	}
+	
+	private void analyzeModel(int t_0, int t_cross1, int t_cross2) {
 		
 		//Run calculations
 		model.calculateBeta(t_0, t_cross1);
@@ -203,6 +217,7 @@ public class SurfaceGrowth extends AbstractSimulation {
 			dataManager.saveImage(width_vs_time, ".", "masterPlot.jpeg");
 			dataManager.saveImage(width_vs_length, ".", "alphaPlot.jpeg");
 		}
+		
 	}
 	
 	private double calculateAverageBeta() {
@@ -253,11 +268,37 @@ public class SurfaceGrowth extends AbstractSimulation {
 	 * */
 	final static int N_max = 10000;
 	final static int mod_max = 10000;
-
-	private int pointModulus(int t) {
+	final static double alphaOverBeta = 1.5D;
+	
+	private long expectedT_cross(int L) {
+		return (long) Math.pow(L, alphaOverBeta);
+	}
+	
+	/**
+	 * Appropriate point modulus for the
+	 * growth phase of the deposition.
+	 */
+	private long growthModulus(long t) {
 		if (t > N_max*((int)(Math.log(mod_max))))
 			return mod_max;
 		return (int)(Math.exp(((double)t)/((double)N_max))) + 1;
+	}
+	
+	/**
+	 * Appropriate point modulus for the
+	 * saturation phase of the deposition.
+	 */
+	private long saturationModulus(long t) {
+		if (t > (long)(Math.log(Double.MAX_VALUE) + Math.log(N_max)))
+			return mod_max;
+		return (long)Math.exp(((double)t) - Math.log((double)N_max)) + 1;
+	}
+
+	private long pointModulus(long t) {
+		if (t < expectedT_cross(model.getLength())) {
+			return growthModulus(t);
+		}
+		return saturationModulus(t);
 	}
 	
 	/*
@@ -280,8 +321,8 @@ public class SurfaceGrowth extends AbstractSimulation {
 			LargeSystemDeposition m = models.get(i);
 			//plot entire width array, set color
 			width_vs_time.setMarkerColor(i, colors[i%colors.length]);
-			int time = m.getTime();
-			for (int t = 1; t <= time; t++) {
+			long time = m.getTime();
+			for (long t = 1; t <= time; t++) {
 				long mod = pointModulus(t)*models.size();
 				if (t % mod == 0) {
 					width_vs_time.append(i, Math.log(t),
@@ -310,13 +351,86 @@ public class SurfaceGrowth extends AbstractSimulation {
 							  Color.GREEN,
 							  Color.BLUE};
 	
+/**************************
+ * DB Operation Callbacks *
+ **************************/
+
+	private AlertDialog dbPushAlert;
+	private AlertDialog dbPullAlert;
+	
+	private DBOperationCallback onPush = new DBOperationCallback() {
+
+		@Override
+		public void onOperationStarted() {
+			dbPushAlert = new AlertDialog(
+				"Push Alert",
+				"Pushing records from memory to local database.\nThis may take several minutes."
+			);
+		}
+
+		@Override
+		public void onOperationCompleted(final long opTime) {
+			
+			dbPushAlert.showMessage(
+				"Push completed in "+(opTime/1000L)+" s."
+			);
+			
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(5000L);
+					} catch (InterruptedException ie) {}
+					
+					dbPushAlert.dispose();
+				}
+				
+			}).run();
+		}
+		
+	};
+	
+	private DBOperationCallback onPull = new DBOperationCallback() {
+
+		@Override
+		public void onOperationStarted() {
+			dbPullAlert = new AlertDialog(
+				"Pull Alert",
+				"Pulling records from memory to local database.\nThis may take several minutes."
+			);
+		}
+
+		@Override
+		public void onOperationCompleted(final long opTime) {
+			
+			dbPullAlert.showMessage(
+				"Pull completed in "+(opTime/1000L)+" s."
+			);
+			
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(5000L);
+					} catch (InterruptedException ie) {}
+					
+					dbPullAlert.dispose();
+				}
+				
+			}).run();
+		}
+		
+	};
+	
 	
 /********
  * Main *
  ********/	
 	
 	public static void main(String[] args) {
-		SimulationControl.createApp(new SurfaceGrowth());
+		SimulationControl.createApp(new DepositionControl());
 	}
 
 }

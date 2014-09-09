@@ -1,6 +1,6 @@
 /*
 ######################################
-Deposition.java
+LargeSystemDeposition.java
 @author		Tyler Parsons
 @created	7 May 2014
  
@@ -12,7 +12,6 @@ stical analysis.
 */
 package ch13;
 
-import ch13.LinearRegression.Function;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -22,6 +21,8 @@ import java.util.HashMap;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
+import ch13.EmbeddedDBArray.DBOperationCallback;
+
 
 public abstract class LargeSystemDeposition implements Drawable {
 
@@ -30,33 +31,36 @@ public abstract class LargeSystemDeposition implements Drawable {
 	protected int H;	// Max height
 	protected int dH;	// Slot height
 	protected int[][] lattice;
-	protected double[] width;
 	protected int[] height;
 	
-	protected double averageHeight;
-	protected double minHeight;
-	protected double maxHeight;
+	// Stores width for systems with L*H > Integer.MAX_VALUE
+	protected EmbeddedDBArray width;
+	protected long maxSteps;
 	
-	protected int time;	//measured in steps
-	protected int Max_Steps;
+	
+	protected double averageHeight;
+	protected int minHeight;
+	protected int maxHeight;
+	
+	protected long time;	//measured in steps
 	
 	// Tracks whether slot has just been cleared,
 	// to prevent duplicate clearing as the first
 	// row is populated.
 	protected boolean bottomCleared;
 	protected boolean topCleared;
-	
+		
 	protected HashMap<String, Double> parameters;
 	
 	//super() must be called in all constructor overloads!
 	public LargeSystemDeposition() {
 		parameters = new HashMap<String, Double>();
-		setParameter("L", 512);
-		setParameter("H", 16384);
+		setParameter("L", 128);
+		setParameter("H", 524288);
 	}
 	
 	/**
-	 * @param params - contains updated parameters input by user
+	 * @param params contains updated parameters input by user
 	 */
 	public void init(HashMap<String, Double> params) {
 		
@@ -64,12 +68,16 @@ public abstract class LargeSystemDeposition implements Drawable {
 		L = (int)getParameter("L");
 		H = (int)getParameter("H");
 		height = new int[L];
-		width = new double[L*H];
-		time = 0;
+		
+		// Define a 2D array
+		maxSteps = ((long)L)*((long)H);
+		width = new EmbeddedDBArray(maxSteps, "deposition.db");
+		
+		time = -1L;	//Incremented once before used
 		
 		// Initialize slot, which will store the uppermost
 		// surface of the deposition as a 2D bit array.
-		dH = 256;
+		dH = L;
 		lattice = new int[dH][L/32];
 		
 		initFunctions();
@@ -80,28 +88,30 @@ public abstract class LargeSystemDeposition implements Drawable {
 		time++;
 		// Calculate and store snapshot of system after each step
 		analyzeHeight();
-		width[time] = width();
+		recordWidth(width());
 		// Clear one half of slot after preceding half fills
 		if (!bottomCleared && (maxHeight % dH) == 0) {
 			clearBottom();
 			bottomCleared = true;
 			topCleared = false;
 		}
-		else if (!topCleared && (maxHeight % (dH/2)) == 0 && (maxHeight%dH) != 0) {
+		else if (!topCleared && (maxHeight % (dH/2)) == 0 && (maxHeight % dH) != 0) {
 			clearTop();
 			topCleared = true;
 			bottomCleared = false;
 		}
+		
 		// Populate a site determined by subclass
-		Point p = depositePoint();
+		Point p = deposite();
 		setBit(p.x, p.y);
 		height[p.x] = p.y;
+		
 	}
 	
 	/*
 	 * Override this method to deposite point.
 	 * */
-	protected abstract Point depositePoint();
+	protected abstract Point deposite();
 	
 	
 /*******************
@@ -109,15 +119,11 @@ public abstract class LargeSystemDeposition implements Drawable {
  *******************/
 
 	protected int getBit(int x, int y) {
-		return (lattice[y%dH][x/32] & (1 << (x%32))) >> (x%32);
+		return (lattice[y%dH][x/32] & (1 << (x%32))) == 0 ? 0 : 1;
 	} 
 	
 	protected void setBit(int x, int y) {
 		lattice[y%dH][x/32] |= (1 << (x%32));
-	}
-	
-	protected void clearBit(int x, int y) {
-		lattice[y%dH][x/32] ^= (1 << (x%32));
 	}
 
 	// Clears the bottom half of the slot
@@ -134,6 +140,27 @@ public abstract class LargeSystemDeposition implements Drawable {
 	}
 	
 
+/*************************
+ * Accessing Width Array *
+ *************************/
+ 
+	public double getWidth(long t) {
+		return width.get(t);
+	}
+ 
+	public void recordWidth(double w) {
+		width.record(w);
+	}
+	
+	public void registerDBOperationCallbacks(
+			DBOperationCallback onPush,
+			DBOperationCallback onPull
+		) {
+		width.registerPushCallback(onPush);
+		width.registerPullCallback(onPull);
+	}
+	
+	
 /******************
  * Helper Methods *
  ******************/	
@@ -174,7 +201,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	}
 
 	protected void setParameter(String name, double value) {
-		parameters.put(name, new Double(value));
+		parameters.put(name, value);
 	}		
 	
 
@@ -184,20 +211,20 @@ public abstract class LargeSystemDeposition implements Drawable {
 	
 	protected double beta;
 	protected double saturatedLnw_avg;
-	protected Function lnw;
-	protected Function lnt;
+	protected LinearRegression.Function lnw;
+	protected LinearRegression.Function lnt;
 	protected LinearRegression lnw_vs_lnt;
 	
 	public void initFunctions() {
 		
-		lnw = new Function() {
+		lnw = new LinearRegression.Function() {
 			public double val(double x) {
-				return Math.log(width[(int)x]);
+				return Math.log(getWidth((long)x));
 			}
 		};
-		lnt = new Function() {
+		lnt = new LinearRegression.Function() {
 			public double val(double x) {
-				return Math.log((int)x);
+				return (double)Math.log((long)x);
 			}
 		};
 	}
@@ -224,11 +251,11 @@ public abstract class LargeSystemDeposition implements Drawable {
 	}
 	
 	//Calculate saturatedLnw_avg during saturation
-	public void calculateSaturatedLnw_avg (int t_cross) {
+	public void calculateSaturatedLnw_avg (long t_cross) {
 		double sum = 0;
-		for (int t = t_cross; t < time; t++)
-			sum += width[t];
-		saturatedLnw_avg = Math.log(((double)sum)/((double)(time-t_cross)));
+		for (long t = t_cross; t < time; t++)
+			sum += getWidth(t);
+		saturatedLnw_avg = (double)Math.log((sum)/((double)(time-t_cross)));
 	}
 	
 	// Calculate max, min and avg height
@@ -251,7 +278,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		double sum = 0;
 		for (int i = 0; i < L; i++)
 			sum += (height[i]-averageHeight)*(height[i]-averageHeight);
-		return Math.sqrt(sum/(double)L);
+		return (double)Math.sqrt(sum/(double)L);
 	}
 	
 
@@ -318,15 +345,17 @@ public abstract class LargeSystemDeposition implements Drawable {
 	public int getdH()							{return dH;}
 	public int getLength()						{return L;}
 	public int getHeight()						{return H;}
-	public int getTime()						{return time;}
+	public long getTime()						{return time;}
+	public int getMaxHeight()					{return maxHeight;}
+	
 	public double getBeta()						{return beta;}
-	public double getWidth(int t)				{return width[t];}
 	public double getAtomicLength()				{return atomicLength;}
 	public double getAtomicHeight()				{return atomicHeight;}
 	public double getAverageHeight()			{return averageHeight;}
 	public double getSaturatedLnw_avg()			{return saturatedLnw_avg;}
 	public double getXSpacing()					{return xSpacing;}
 	public double getYSpacing()					{return ySpacing;}
-	public HashMap<String, Double> parameters()	{return parameters;}
+	
+	public HashMap<String, Double> parameters()	{return new HashMap<String, Double>(parameters);}
 
 }

@@ -23,7 +23,7 @@ public class BallisticDeposition extends LargeSystemDeposition {
 		super();
 	}
 	
-	protected Point depositePoint() {
+	protected Point deposite() {
 		
 		int col = (int)(Math.random()*L);
 		int h = localMaxHeight(col - 1, col + 1);

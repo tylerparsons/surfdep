@@ -321,7 +321,7 @@ public class SurfaceGrowth extends AbstractSimulation {
  ********/	
 	
 	public static void main(String[] args) {
-		SimulationControl.createApp(new SurfaceGrowth());
+		SimulationControl.createApp(new DepositionControl());
 	}
 
 }

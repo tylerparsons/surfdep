@@ -62,7 +62,7 @@ public class DepositionControl extends AbstractSimulation {
 	public DepositionControl() {
 		
 		//set up visualizations
-		model = new BallisticDiffusionModel();
+		model = new BallisticDeposition();
 		models = new ArrayList<LargeSystemDeposition>();
 		lattice = new LatticeFrame(model.getClass().getName());
 		
@@ -83,7 +83,7 @@ public class DepositionControl extends AbstractSimulation {
 	
 	public void initialize() {
 		//Create a new model for each simulation
-		model = new BallisticDiffusionModel();
+		model = new BallisticDeposition();
 		lattice.clearDrawables();
 		lattice.setVisible(false);
 		width_vs_length.setVisible(false);

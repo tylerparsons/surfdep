@@ -38,7 +38,7 @@ public class DataManager {
 	
 	private int outputId;
 	
-	final static String baseDir = "C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\";
+	final static String baseDir = "data\\";
 	
 	private MySQLClient db;
 	

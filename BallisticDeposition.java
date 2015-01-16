@@ -9,7 +9,7 @@ surface deposition model based on
 the bonding of atoms. 
 ######################################
 */
-package ch13;
+package bdm;
 
 public class BallisticDeposition extends Deposition {
 

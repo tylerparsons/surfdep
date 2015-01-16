@@ -9,7 +9,7 @@ iation of models, visualization, data
 analysis, UI and I/O of parameters.
 ######################################
 */
-package ch13;
+package bdm;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 import org.opensourcephysics.controls.SimulationControl;
@@ -18,8 +18,7 @@ import org.opensourcephysics.frames.PlotFrame;
 import org.opensourcephysics.frames.LatticeFrame;
 import java.awt.Color;
 
-import ch13.Parameter;
-import ch13.LinearRegression.Function;
+import bdm.LinearRegression.Function;
 import java.util.ArrayList;
 
 import java.util.Scanner;

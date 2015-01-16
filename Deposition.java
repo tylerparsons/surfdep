@@ -10,7 +10,7 @@ plementation, visualization and stati-
 stical analysis.
 ######################################
 */
-package ch13;
+package bdm;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -20,8 +20,7 @@ import java.util.ArrayList;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
-import ch13.LinearRegression.Function;
-import ch13.Parameter;
+import bdm.LinearRegression.Function;
 
 
 public abstract class Deposition implements Drawable {

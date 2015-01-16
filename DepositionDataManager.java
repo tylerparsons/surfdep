@@ -11,7 +11,7 @@ numerical values and saves images with
 file I/O.
 ######################################
 */
-package ch13;
+package bdm;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -24,7 +24,6 @@ import org.opensourcephysics.display.DrawingFrame;
 
 import java.util.Scanner;
 import java.util.ArrayList;
-import ch13.Parameter;
 
 public class DepositionDataManager {
 

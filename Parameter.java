@@ -9,7 +9,7 @@ along with their associated names for
 easy access and storage.
 ######################################
 */
-package ch13;
+package bdm;
 
 public class Parameter {
 	

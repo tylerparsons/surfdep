@@ -7,15 +7,15 @@ import java.util.ArrayList;
 
 public class EmbeddedDBArray {
 
-	final static long MAX_ARRAY_SIZE = (long)((Integer.MAX_VALUE) >> 5);
+	final static long MAX_ARRAY_SIZE = (long)((Integer.MAX_VALUE) >> 6);
 	
 	final static int DUMMY_OFFSET = -1;
 
 	/**
-	 * Handles connections to the SQLite database with which
+	 * Handles connections to the MySQL database with which
 	 * this EmbeddedDBArray stores and accesses its values.
 	 */
-	private SQLiteClient dbClient;
+	private MySQLClient dbClient;
 	
 	/**
 	 * Stores a "working copy" of a section of the database,
@@ -66,9 +66,10 @@ public class EmbeddedDBArray {
 	private DBOperationCallback pullCallback;
 	
 	
-	public EmbeddedDBArray (long suggestedCapacity, String dbPath) {
+	public EmbeddedDBArray (long suggestedCapacity) {
 	
-		dbClient = new SQLiteClient(dbPath);
+		dbClient = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
+		dbClient.clearWidthTable();
 	
 		local = new double[(int)MAX_ARRAY_SIZE];
 		
@@ -167,7 +168,7 @@ public class EmbeddedDBArray {
 		System.out.println("pull("+offset+") called.");
 		long start = System.currentTimeMillis();
 	
-		ResultSet records = dbClient.queryRecords(
+		ResultSet records = dbClient.queryWidthRecords(
 			((long)offset)	* MAX_ARRAY_SIZE,
 			((long)offset+1)* MAX_ARRAY_SIZE
 		);
@@ -177,7 +178,7 @@ public class EmbeddedDBArray {
 		try {
 		
 			while(records.next()) {
-				local[index++] = records.getDouble("value");
+				local[index++] = records.getDouble("w");
 			}
 			System.out.println("Read "+index+" records from db.");
 			// Let remaining array elements be 0
@@ -208,7 +209,7 @@ public class EmbeddedDBArray {
 		System.out.println("push("+offset+") called.");
 		long start = System.currentTimeMillis();
 	
-		dbClient.addRecords(local);
+		dbClient.addWidthRecords(local);
 		
 		// Update changeList
 		changeList.remove(offset);

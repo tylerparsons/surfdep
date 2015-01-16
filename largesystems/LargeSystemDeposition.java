@@ -55,8 +55,9 @@ public abstract class LargeSystemDeposition implements Drawable {
 	//super() must be called in all constructor overloads!
 	public LargeSystemDeposition() {
 		parameters = new HashMap<String, Double>();
-		setParameter("L", 128);
+		setParameter("L", 256);
 		setParameter("H", 524288);
+		setParameter("dH", 2048);
 	}
 	
 	/**
@@ -67,18 +68,19 @@ public abstract class LargeSystemDeposition implements Drawable {
 		parameters = params;
 		L = (int)getParameter("L");
 		H = (int)getParameter("H");
+		dH = (int)getParameter("dH");
 		height = new int[L];
 		
-		// Define a 2D array
+		// Define an array to store width values
 		maxSteps = ((long)L)*((long)H);
-		width = new EmbeddedDBArray(maxSteps, "deposition.db");
+		int modelId = (int)getParameter("modelId");
+		width = new EmbeddedDBArray(maxSteps);
 		
 		time = -1L;	//Incremented once before used
 		
 		// Initialize slot, which will store the uppermost
 		// surface of the deposition as a 2D bit array.
-		dH = L;
-		lattice = new int[dH][L/32];
+		lattice = new int[dH][L%32 == 0 ? L/32 : L/32 + 1];
 		
 		initFunctions();
 		initDrawingParams();
@@ -86,25 +88,36 @@ public abstract class LargeSystemDeposition implements Drawable {
 	
 	public final void step() {
 		time++;
-		// Calculate and store snapshot of system after each step
-		analyzeHeight();
-		recordWidth(width());
+
+		// Select deposition location
+		Point p = deposite();
+		
 		// Clear one half of slot after preceding half fills
-		if (!bottomCleared && (maxHeight % dH) == 0) {
+		if (!bottomCleared && (p.y % dH) == 0) {
 			clearBottom();
 			bottomCleared = true;
 			topCleared = false;
 		}
-		else if (!topCleared && (maxHeight % (dH/2)) == 0 && (maxHeight % dH) != 0) {
+		else if (!topCleared && (p.y % (dH/2)) == 0 && (p.y % dH) != 0) {
 			clearTop();
 			topCleared = true;
 			bottomCleared = false;
 		}
 		
-		// Populate a site determined by subclass
-		Point p = deposite();
+		// TODO debug
+		// Analyze topography when occupied site is selected
+		if (getBit(p.x, p.y) == 1) {
+			System.out.println("Attempting to deposite in occupied site ("+p.x+", "+p.y+")!");
+//			printLocalTopography(p.x, p.y, 4, 4);
+		}
+		
+		// Populate site determined by subclass		
 		setBit(p.x, p.y);
 		height[p.x] = p.y;
+		
+		// Calculate and store snapshot of system after each step
+		analyzeHeight();
+		recordWidth(width());
 		
 	}
 	
@@ -243,19 +256,19 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * 		b = beta = (growth exponent).
 	 * 
 	 * */
-	public void calculateBeta(int t_0, int t_cross) {
-		if (t_cross <= 0)
+	public void calculateBeta(int t_0, int t_x) {
+		if (t_x <= 0)
 			return;
-		lnw_vs_lnt = new LinearRegression(lnt, lnw, t_0, t_cross, 1);
+		lnw_vs_lnt = new LinearRegression(lnt, lnw, t_0, t_x, 1);
 		beta = lnw_vs_lnt.m();
 	}
 	
 	//Calculate saturatedLnw_avg during saturation
-	public void calculateSaturatedLnw_avg (long t_cross) {
+	public void calculateSaturatedLnw_avg (long t_x) {
 		double sum = 0;
-		for (long t = t_cross; t < time; t++)
+		for (long t = t_x; t < time; t++)
 			sum += getWidth(t);
-		saturatedLnw_avg = (double)Math.log((sum)/((double)(time-t_cross)));
+		saturatedLnw_avg = (double)Math.log((sum)/((double)(time-t_x)));
 	}
 	
 	// Calculate max, min and avg height
@@ -327,6 +340,25 @@ public abstract class LargeSystemDeposition implements Drawable {
 		return scalar!=0 ? scalar : 1;
 	}
 	
+/*******************
+ * Debug Utilities *
+ *******************/
+	
+	
+	protected void printLocalTopography(int x, int y, int dx, int dy) {
+		
+		int x_min = (x-dx)<0 ? 0:(x-dx);
+		int x_max = (x+dx)>(L-1) ? (L-1):(x+dx);
+		int y_min = (y-dy)<0 ? 0:(y-dy);
+		int y_max = (y+dy)>(dH-1) ? (dH-1):(y+dy);
+		
+		for (int j = y_max; j >= y_min; j--) {
+			for (int i = x_min ; i < x_max + 1; i++) {
+				System.out.print(getBit(i, j) + (i==x && j==y ? "<":" "));// + "("+i+", "+j+") ");
+			}
+			System.out.println();
+		}
+	}
 
 /******************
  * Nested Classes *

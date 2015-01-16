@@ -4,43 +4,34 @@ import java.io.File;
 import java.lang.Throwable;
 import java.sql.*;
 
-
-public class SQLiteClient {
-	
-	private String connectionUrl;
+/**
+ * @deprecated
+ * @author Tyler
+ */
+public class SQLiteClient extends SQLClient {
 	
 	private String dbUrl;
 	
-	private Connection mConnection;
-	
-	private int BATCH_SIZE = 1024;
-	
 	public SQLiteClient(String dbUrl) {
+		
+		super("jdbc:sqlite:"+dbUrl, "org.sqlite.JDBC");
 		
 		this.dbUrl = dbUrl;
 		
-		// Delete existing db
-		deleteDb();
-		
-		connectionUrl = "jdbc:sqlite:"+dbUrl;
-	
 		try {
 	
-			// Load Driver class by reflection
-			Class.forName("org.sqlite.JDBC");
-			// Make initial connection
-			mConnection = DriverManager.getConnection(connectionUrl);
 			// Create width table
 			Statement stmt = mConnection.createStatement();
 			stmt.executeUpdate("DROP TABLE IF EXISTS width");
-			stmt.executeUpdate("CREATE TABLE width (" +
-									"time INTEGER PRIMARY KEY AUTOINCREMENT," +
-									"value REAL" +
-								")");			
+			stmt.executeUpdate(
+				"CREATE TABLE width (" +
+					"time INTEGER PRIMARY KEY AUTOINCREMENT," +
+					"value REAL" +
+				")"
+			);			
 			
 		}
 		catch (SQLException e) {e.printStackTrace();}
-		catch (ClassNotFoundException e) {e.printStackTrace();}
 	
 	}
 	
@@ -142,9 +133,8 @@ public class SQLiteClient {
 	}
 	
 	protected void finalize() throws Throwable {
-		mConnection.close();
-		deleteDb();
 		super.finalize();
+		deleteDb();
 	}
 	
 

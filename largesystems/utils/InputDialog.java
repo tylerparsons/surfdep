@@ -133,16 +133,13 @@ public class InputDialog extends JFrame {
 		
 	}
 	
+	/**
+	 * Calls analyzeModel, parsing input from TextAreas
+	 */
 	private ActionListener inputEntryListener() {
 		
-		return new ActionListener() {
-			/**
-			 * Calls analyzeModel, parsing input from TextAreas
-			 */
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				processInput();
-			}
+		return (ActionEvent e) -> {
+			processInput();
 		};
 		
 	}

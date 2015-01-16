@@ -75,7 +75,6 @@ public abstract class LargeSystemDeposition implements Drawable {
 		
 		// Define an array to store width values
 		maxSteps = ((long)L)*((long)H);
-		int modelId = (int)getParameter("modelId");
 		width = new EmbeddedDBArray(maxSteps);
 		
 		time = -1L;	//Incremented once before used
@@ -232,15 +231,11 @@ public abstract class LargeSystemDeposition implements Drawable {
 	
 	public void initFunctions() {
 		
-		lnw = new LinearRegression.Function() {
-			public double val(double x) {
-				return Math.log(getWidth((long)x));
-			}
+		lnw = (double x) -> {
+			return Math.log(getWidth((long)x));
 		};
-		lnt = new LinearRegression.Function() {
-			public double val(double x) {
-				return (double)Math.log((long)x);
-			}
+		lnt = (double x) -> {
+			return (double)Math.log((long)x);
 		};
 	}
 

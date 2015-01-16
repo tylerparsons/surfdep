@@ -116,12 +116,7 @@ public class AnalysisControl {
 			new InputDialog(
 				inputMessage,
 				inputParams,
-				new InputDialog.InputHandler() {
-					@Override
-					public void handleInput(HashMap<String, String> input) {
-						analyzer.analyze(input);
-					}
-				}
+				(HashMap<String, String> input) -> analyzer.analyze(input)
 			);
 			
 		}
@@ -166,32 +161,25 @@ public class AnalysisControl {
 		// Function map
 		analysisFunctions = new LinkedHashMap<String, AnalysisFunction>();
 		
-		
 		analysisFunctions.put("Calculate average", new AnalysisFunction(
 			"Enter valid parameter name ",
 			new String[] {"Parameter name"},
-			new Analyzer() {
-				@Override
-				public void analyze(HashMap<String, String> input) {
-					// Run average for the given parameter
-					final String paramName = input.get("Parameter name");
-					AnalysisFunction.defaultInputAf(new Analyzer () {
-						@Override
-						public void analyze(HashMap<String, String> input) {
-							calcAvg(paramName, new ModelGroupIdentifier(input));
-						}
-					}).analyze();
-				}
+			(HashMap<String, String> input) -> {
+				// Run average for the given parameter
+				final String paramName = input.get("Parameter name");
+				AnalysisFunction.defaultInputAf(new Analyzer() {
+					@Override
+					public void analyze(HashMap<String, String> input) {
+						calcAvg(paramName, new ModelGroupIdentifier(input));
+					}
+				}).analyze();
 			}
 		));
 
 		analysisFunctions.put("Scaled avg width plot", AnalysisFunction.defaultInputAf(
-				new Analyzer() {
-					@Override
-					public void analyze(HashMap<String, String> input) {
-						scaledAvgWidthPlot(new ModelGroupIdentifier(input));
-					}
-				}	
+			(HashMap<String, String> input) -> {
+				scaledAvgWidthPlot(new ModelGroupIdentifier(input));
+			}	
 		));
 		
 		
@@ -211,22 +199,19 @@ public class AnalysisControl {
 	 */
 	private void initControlWindow() {
 		
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
+		Thread t = new Thread( () -> {
 				
-				// Create dialog
-				String functionName = (String)JOptionPane.showInputDialog(
-						null, "Select an analysis function",
-						"Analysis Control",JOptionPane.QUESTION_MESSAGE,
-						null,functionNames,"Add a new friend"
-				);
-				
-				// Invoke callback
-				if (analysisFunctions.get(functionName) != null)
-					analysisFunctions.get(functionName).analyze();
-				
-			}
+			// Create dialog
+			String functionName = (String)JOptionPane.showInputDialog(
+					null, "Select an analysis function",
+					"Analysis Control",JOptionPane.QUESTION_MESSAGE,
+					null,functionNames,"Add a new friend"
+			);
+			
+			// Invoke callback
+			if (analysisFunctions.get(functionName) != null)
+				analysisFunctions.get(functionName).analyze();
+			
 		});
 		t.start();
 		

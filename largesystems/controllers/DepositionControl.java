@@ -216,25 +216,21 @@ public class DepositionControl extends AbstractSimulation {
 		//Request input of t_cross and implement input callback
 		//to analyze model
 		
+		// Dialog for inputting t_x values
 		new InputDialog(
 			"Input t_x values",
 			new String[] {"t_0", "t_x1", "t_x2"},
-			new InputDialog.InputHandler() {
-
-				@Override
-				public void handleInput(HashMap<String, String> input) {
-					
-					String t_0, t_x1, t_x2;
-					
-					analyzeModel(
-						(int) Math.exp(Double.parseDouble(
-								(t_0 = input.get("t_0").trim()).equals("") ? "0" : t_0)),
-						(int) Math.exp(Double.parseDouble(
-								(t_x1 = input.get("t_x1").trim()).equals("") ? "0" : t_x1)),
-						(int) Math.exp(Double.parseDouble(
-								(t_x2 = input.get("t_x2").trim()).equals("") ? "0" : t_x2))
-					);
-				}
+			(HashMap<String, String> input) -> {
+				// Grab parameters from input map, pass to analyzeModel
+				String t_0, t_x1, t_x2;
+				analyzeModel(
+					(int) Math.exp(Double.parseDouble(
+							(t_0 = input.get("t_0").trim()).equals("") ? "0" : t_0)),
+					(int) Math.exp(Double.parseDouble(
+							(t_x1 = input.get("t_x1").trim()).equals("") ? "0" : t_x1)),
+					(int) Math.exp(Double.parseDouble(
+							(t_x2 = input.get("t_x2").trim()).equals("") ? "0" : t_x2))
+				);
 			}
 		);
 		
@@ -368,17 +364,12 @@ public class DepositionControl extends AbstractSimulation {
 				"Push completed in "+(opTime/1000L)+" s."
 			);
 			
-			new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(5000L);
-					} catch (InterruptedException ie) {}
-					
-					dbPushAlert.dispose();
-				}
+			new Thread( () -> {
+				try {
+					Thread.sleep(5000L);
+				} catch (InterruptedException ie) {}
 				
+				dbPushAlert.dispose();				
 			}).run();
 		}
 		
@@ -401,17 +392,12 @@ public class DepositionControl extends AbstractSimulation {
 				"Pull completed in "+(opTime/1000L)+" s."
 			);
 			
-			new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(5000L);
-					} catch (InterruptedException ie) {}
-					
-					dbPullAlert.dispose();
-				}
+			new Thread( () -> {
+				try {
+					Thread.sleep(5000L);
+				} catch (InterruptedException ie) {}
 				
+				dbPullAlert.dispose();				
 			}).run();
 		}
 		
@@ -460,22 +446,19 @@ public class DepositionControl extends AbstractSimulation {
 		
 		// Run trials recursively
 		control.initialize(params);
-		control.setAnalysisCallback(new Runnable() {
-
-			@Override
-			public void run() {
-				if (--remainingTrials > 0) {
-					
-					if ((modelId+1) % plotAllMod == 0) {
-						control.plotAll();
-					}
-					if ((modelId+1) % clearMod == 0) {
-						control.clearMemory();
-					}
-					
-					control.initialize(params);
-					control.startSimulation();
+		control.setAnalysisCallback( () -> {
+			
+			if (--remainingTrials > 0) {
+				
+				if ((modelId+1) % plotAllMod == 0) {
+					control.plotAll();
 				}
+				if ((modelId+1) % clearMod == 0) {
+					control.clearMemory();
+				}
+				
+				control.initialize(params);
+				control.startSimulation();
 			}
 			
 		});

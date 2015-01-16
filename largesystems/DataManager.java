@@ -25,6 +25,7 @@ import java.awt.Container;
 import org.opensourcephysics.display.DrawingFrame;
 
 import bdm.largesystems.models.LargeSystemDeposition;
+import bdm.largesystems.utils.MySQLClient;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

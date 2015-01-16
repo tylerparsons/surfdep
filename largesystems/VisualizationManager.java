@@ -10,6 +10,7 @@ import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
 
 import bdm.largesystems.models.LargeSystemDeposition;
+import bdm.largesystems.utils.LinearRegression;
 
 public class VisualizationManager {
 

@@ -11,10 +11,13 @@ analysis, UI and I/O of parameters.
 */
 package bdm.largesystems;
 
-import bdm.largesystems.EmbeddedDBArray.DBOperationCallback;
-import bdm.largesystems.LinearRegression.Function;
 import bdm.largesystems.models.BallisticDiffusionModel;
 import bdm.largesystems.models.LargeSystemDeposition;
+import bdm.largesystems.utils.AlertDialog;
+import bdm.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
+import bdm.largesystems.utils.InputDialog;
+import bdm.largesystems.utils.LinearRegression;
+import bdm.largesystems.utils.LinearRegression.Function;
 
 import java.io.File;
 import java.io.FileNotFoundException;

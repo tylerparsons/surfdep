@@ -21,9 +21,9 @@ import java.util.HashMap;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
-import bdm.largesystems.EmbeddedDBArray;
-import bdm.largesystems.EmbeddedDBArray.DBOperationCallback;
-import bdm.largesystems.LinearRegression;
+import bdm.largesystems.utils.EmbeddedDBArray;
+import bdm.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
+import bdm.largesystems.utils.LinearRegression;
 
 
 public abstract class LargeSystemDeposition implements Drawable {

@@ -11,7 +11,7 @@ lyze continuous and constant functions,
 and arrays.
 ######################################
 */
-package bdm.largesystems;
+package bdm.largesystems.utils;
 
 import java.awt.Color;
 import java.awt.Graphics;

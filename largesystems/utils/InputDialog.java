@@ -1,4 +1,4 @@
-package bdm.largesystems;
+package bdm.largesystems.utils;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;

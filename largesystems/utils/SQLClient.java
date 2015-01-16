@@ -1,4 +1,4 @@
-package bdm.largesystems;
+package bdm.largesystems.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

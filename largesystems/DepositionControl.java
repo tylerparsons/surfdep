@@ -14,16 +14,16 @@ package bdm.largesystems;
 import bdm.largesystems.EmbeddedDBArray.DBOperationCallback;
 import bdm.largesystems.LinearRegression.Function;
 
-import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Scanner;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 import org.opensourcephysics.controls.SimulationControl;
-import org.opensourcephysics.frames.PlotFrame;
-import org.opensourcephysics.frames.LatticeFrame;
 
-/*
+/**
  * To Do:
  * 
  * - Develop way to increase space efficiency
@@ -47,65 +47,102 @@ import org.opensourcephysics.frames.LatticeFrame;
  */
 public class DepositionControl extends AbstractSimulation {
 
-	private LatticeFrame lattice;
-	private PlotFrame width_vs_time, width_vs_length;
-	private LinearRegression lnw_vs_lnL;
 	private ArrayList<LargeSystemDeposition> models;
 	private LargeSystemDeposition model;
-	private DepositionDataManager dataManager;
+	private LinearRegression lnw_vs_lnL;
+	
+	private DataManager dataManager;
+	private VisualizationManager visManager;
+	
+	// Auto incremented id associated with each model
+	
+	// Invoked when analysis of a model is finished.
+	private Runnable analysisCallback = null;
+	
+	// Static trial parameters
+	private static int modelId = 0;
+	private static int remainingTrials;
+	private static int clearMod;
+	private static int plotAllMod;
+	
+	// Driectory in which simulation data is stored
+	private final static String DIR_DATA_ROOT = "data\\";
 
 	
 /**************************
  * Initialization Methods *
  **************************/
 	
+	/**
+	 * Constructor
+	 */
 	public DepositionControl() {
 		
 		//set up visualizations
-		model = new BallisticDeposition();
+		model = new BallisticDiffusionModel();
 		models = new ArrayList<LargeSystemDeposition>();
-		lattice = new LatticeFrame(model.getClass().getName());
 		
-		width_vs_time = new PlotFrame("ln t (t in steps)", "ln w", "ln w = b*ln t + C");
-		width_vs_time.setAutoscaleX(true);
-		width_vs_time.setAutoscaleY(true);
-		width_vs_length = new PlotFrame("ln L", "ln w_avg", "ln w = a*ln L + C (After Saturation)");
-		width_vs_length.setAutoscaleX(true);
-		width_vs_length.setAutoscaleY(true);
-		
-		dataManager = new DepositionDataManager(
-			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\id_log.txt",
-			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\deposition_data.txt",
-			"C:\\Users\\Tyler\\Documents\\Classes\\CurrentClasses\\PHYS436\\workspace\\csm\\data\\deposition_data.csv"
+		visManager = new VisualizationManager(model.getClass().getName());
+		dataManager = new DataManager(
+			DIR_DATA_ROOT + "id_log.txt",
+			DIR_DATA_ROOT + "deposition_data.txt",
+			DIR_DATA_ROOT + "deposition_data.csv"
 		);
 		dataManager.startTrial();
 	}
 	
 	public void initialize() {
-		//Create a new model for each simulation
-		model = new BallisticDeposition();
-		lattice.clearDrawables();
-		lattice.setVisible(false);
-		width_vs_length.setVisible(false);
 		
-		//Set Parameters
+		//Create a new model for each simulation
+		model = new BallisticDiffusionModel();
+		
+		// Setup plots
+		visManager.initPlots();
+		
+		// Obtain parameters from control
 		HashMap<String, Double> params = model.parameters();
 		for (String name: params.keySet()) {
 			params.put(name, control.getDouble(name));
 		}
+		params.put("modelId", (double)++modelId);
 		model.init(params);
 		
 		// Enable database operation alerts
 		model.registerDBOperationCallbacks(onPush, onPull);
 		
 		if (control.getBoolean("Enable Visualizations")) {
-			lattice.addDrawable(model);
-			lattice.setVisible(true);
-			lattice.setPreferredMinMax(
-				0, model.getLength()*model.getXSpacing(),
-				0, model.getdH()*model.getYSpacing()
-			);
+			visManager.initVisuals(model);
 		}		
+	}
+	
+	public void initialize(HashMap<String, Double> params) {
+		
+		//Create a new model for each simulation
+		model = new BallisticDiffusionModel();	
+		
+		// Setup plots
+		visManager.initPlots();
+		
+		//Set Parameters
+		params.put("modelId", (double)modelId++);
+		model.init(params);
+		
+		// Enable database operation alerts
+		model.registerDBOperationCallbacks(onPush, onPull);
+		
+		// Enable/disable visualizations
+		if (params.get("Enable Visualizations") != null
+		&&	params.remove("Enable Visualizations") == 1) {
+			visManager.initVisuals(model);
+		}
+		else {
+			visManager.hideLattice();
+		}
+		
+		// Set steps per display if applicable
+		if(params.get("stepsPerDisplay") != null)
+			setStepsPerDisplay(params.remove("stepsPerDisplay").intValue());
+		
 	}
 	
 	
@@ -126,16 +163,21 @@ public class DepositionControl extends AbstractSimulation {
 		enableStepsPerDisplay(true);
 	}
 	
-	
-/****************
- * Calculations *
- ****************/
-	
 	protected void doStep() {
-		if(model.getAverageHeight() > 0.9*model.getHeight()) {
+		
+		// Stop before model reaches maximum height
+		if (model.getAverageHeight() > 0.9*model.getHeight()) {
 			stopSimulation();
 			return;
 		}
+		
+//		if (model.getTime() == EmbeddedDBArray.MAX_ARRAY_SIZE - 1) {
+//			stopSimulation();
+//			return;
+//		}
+		
+		// Catch and report any exceptions without 
+		// losing simulation to runtime errors
 		try {
 			model.step();
 		} catch(ArrayIndexOutOfBoundsException e) {
@@ -143,11 +185,20 @@ public class DepositionControl extends AbstractSimulation {
 			stopSimulation();
 			return;
 		}
+		
+		// Plot points according to the distribution
+		// given by point modulus, which is intended
+		// to prevent overflow of points on the plot
+		// frame
 		long time = model.getTime();
-		long mod = pointModulus(time);
+		long mod = visManager.pointModulus(time, model.getLength());
 		if(time%mod == 0) {
-			width_vs_time.append(model.getLength(), Math.log(time),
+			// Plot
+			visManager.logPlotWidth(model.getLength(), Math.log(time),
 								 Math.log(model.getWidth(time)));
+			// Save average width for this model type
+			// for future scaled plots
+			dataManager.updateW_avg(model);
 		}
 	}
 	
@@ -160,38 +211,64 @@ public class DepositionControl extends AbstractSimulation {
 		//Request input of t_cross and implement input callback
 		//to analyze model
 		
-		new TCrossInputDialog(new TCrossInputDialog.InputHandler() {
+		new InputDialog(
+			"Input t_x values",
+			new String[] {"t_0", "t_x1", "t_x2"},
+			new InputDialog.InputHandler() {
 
-			@Override
-			public void onInputReceived(HashMap<String, Double> input) {
-				analyzeModel(
-					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_0).doubleValue()),
-					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_CROSS1).doubleValue()),
-					(int) Math.exp(input.get(TCrossInputDialog.KEY_T_CROSS2).doubleValue())
-				);
-				
+				@Override
+				public void handleInput(HashMap<String, String> input) {
+					
+					String t_0, t_x1, t_x2;
+					
+					analyzeModel(
+						(int) Math.exp(Double.parseDouble(
+								(t_0 = input.get("t_0").trim()).equals("") ? "0" : t_0)),
+						(int) Math.exp(Double.parseDouble(
+								(t_x1 = input.get("t_x1").trim()).equals("") ? "0" : t_x1)),
+						(int) Math.exp(Double.parseDouble(
+								(t_x2 = input.get("t_x2").trim()).equals("") ? "0" : t_x2))
+					);
+				}
 			}
-			
-		});
-		
+		);
 		
 	}
 	
-	private void analyzeModel(int t_0, int t_cross1, int t_cross2) {
+	/**
+	 * Dereferences all models and suggests garbage collection.
+	 */
+	public void clearMemory() {
+		models.clear();
+		model = null;
+		System.gc();
+	}
+	
+	public void setAnalysisCallback(Runnable callback) {
+		analysisCallback = callback;
+	}
+	
+	
+/****************
+ * Calculations *
+ ****************/	
+	
+	private void analyzeModel(int t_0, int t_x1, int t_x2) {
 		
 		//Run calculations
-		model.calculateBeta(t_0, t_cross1);
-		model.calculateSaturatedLnw_avg(t_cross2);
+		model.calculateBeta(t_0, t_x1);
+		model.calculateSaturatedLnw_avg(t_x2);
 		double beta_avg = calculateAverageBeta();
 		double alpha = calculateAlpha();
 		
 		//Wrap data in Parameters to pass to dataManager as list
 		HashMap<String, Double> addlParams = new HashMap<String, Double>();
-		addlParams.put("averageHeight", new Double(model.getAverageHeight()));
-		addlParams.put("width", new Double(model.getWidth(model.getTime())));
-		addlParams.put("numsteps", new Double(model.getTime()));
-		addlParams.put("t_cross1", new Double(t_cross1));
-		addlParams.put("t_cross2", new Double(t_cross2));
+		addlParams.put("h_avg", new Double(model.getAverageHeight()));
+		addlParams.put("w", new Double(model.getWidth(model.getTime())));
+		addlParams.put("t", new Double(model.getTime()));
+		addlParams.put("t_0", new Double(t_0));
+		addlParams.put("t_x1", new Double(t_x1));
+		addlParams.put("t_x2", new Double(t_x2));
 		addlParams.put("lnw_avg", new Double(model.getSaturatedLnw_avg()));
 		addlParams.put("beta", new Double(model.getBeta()));
 		addlParams.put("beta_avg", new Double(beta_avg));
@@ -206,17 +283,20 @@ public class DepositionControl extends AbstractSimulation {
 		
 		//Save, display data
 		if (control.getBoolean("Save Data")) {
-			dataManager.saveToTxt(model, addlParams);
-			dataManager.saveToCSV(model, addlParams);
-			String fileName = "L"+model.getLength()+"H"+model.getHeight();
-			dataManager.saveImage(lattice, "lattices", fileName + ".jpeg");
-			dataManager.saveImage(width_vs_time, "plots", fileName + ".jpeg");
+			dataManager.saveAll(model, addlParams);
+			String fileName = "L"+model.getLength()+"H"+model.getHeight()+"_"+modelId;
+			dataManager.saveImage(visManager.getLattice(), "lattices", fileName + ".jpeg");
+			dataManager.saveImage(visManager.getWidthVsTime(), "plots", fileName + ".jpeg");
 		}
 		if (control.getBoolean("Plot All")) {
 			plotAll();
-			dataManager.saveImage(width_vs_time, ".", "masterPlot.jpeg");
-			dataManager.saveImage(width_vs_length, ".", "alphaPlot.jpeg");
+			dataManager.saveImage(visManager.getWidthVsTime(), ".", "masterPlot_"+modelId+".jpeg");
+			dataManager.saveImage(visManager.getWidthVsLength(), ".", "alphaPlot_"+modelId+".jpeg");
 		}
+		
+		// Invoke callback if one has been specified
+		if (analysisCallback != null)
+			analysisCallback.run();
 		
 	}
 	
@@ -228,7 +308,10 @@ public class DepositionControl extends AbstractSimulation {
 		return sum/(double)models.size();
 	}
 	
-	// Runs regression of lnw_avg vs lnL
+	/**
+	 *  Runs regression of lnw_avg vs lnL
+	 * @return alpha
+	 */
 	private double calculateAlpha() {
 		
 		//wrap lnL, lnw_avg in Functions
@@ -246,110 +329,15 @@ public class DepositionControl extends AbstractSimulation {
 		lnw_vs_lnL = new LinearRegression(lnL, lnw_avg, 0, (double)models.size()-1, 1);
 		return lnw_vs_lnL.m();
 	}
+
+	protected void plotAll() {
+		visManager.plotAllModels(models);
+		visManager.logPlotWidthVsLength(models, lnw_vs_lnL);
+	}
 	
 	public boolean exists(LargeSystemDeposition m) {
 		return models.contains(m);
 	}
-	
-	
-/***************************
- * Visualization Functions *
- ***************************/
-	
-	/*
-	 * Point Density Calculator
-	 * 	- Determines density of plotted points
-	 *    based on time elapsed and N_max, the
-	 *    plot's point capacity.
-	 *  - Density decays such that lim t->inf-
-	 *    inity N(t) = N_max
-	 *  - Returns a max of 1000 to continue p-
-	 *    lotting for very large t
-	 * */
-	final static int N_max = 10000;
-	final static int mod_max = 10000;
-	final static double alphaOverBeta = 1.5D;
-	
-	private long expectedT_cross(int L) {
-		return (long) Math.pow(L, alphaOverBeta);
-	}
-	
-	/**
-	 * Appropriate point modulus for the
-	 * growth phase of the deposition.
-	 */
-	private long growthModulus(long t) {
-		if (t > N_max*((int)(Math.log(mod_max))))
-			return mod_max;
-		return (int)(Math.exp(((double)t)/((double)N_max))) + 1;
-	}
-	
-	/**
-	 * Appropriate point modulus for the
-	 * saturation phase of the deposition.
-	 */
-	private long saturationModulus(long t) {
-		if (t > (long)(Math.log(Double.MAX_VALUE) + Math.log(N_max)))
-			return mod_max;
-		return (long)Math.exp(((double)t) - Math.log((double)N_max)) + 1;
-	}
-
-	private long pointModulus(long t) {
-		if (t < expectedT_cross(model.getLength())) {
-			return growthModulus(t);
-		}
-		return saturationModulus(t);
-	}
-	
-	/*
-	 * Plots all models on two different plots
-	 * 	- width_vs_time
-	 * 		-> used to measure beta
-	 * 		-> plots entire width array up to
-	 * 		   total run time for each model
-	 * 	- lnw_vs_lnA
-	 * 		-> plots ln of avgerage width ag-
-	 * 		   ainst ln L
-	 * 		-> runs linear regression for alpha
-	 * 
-	 * */
-	private void plotAll() {
-		
-		// width_vs_time
-		width_vs_time.clearDrawables();
-		for (int i = 0; i < models.size(); i++) {
-			LargeSystemDeposition m = models.get(i);
-			//plot entire width array, set color
-			width_vs_time.setMarkerColor(i, colors[i%colors.length]);
-			long time = m.getTime();
-			for (long t = 1; t <= time; t++) {
-				long mod = pointModulus(t)*models.size();
-				if (t % mod == 0) {
-					width_vs_time.append(i, Math.log(t),
-							 Math.log(m.getWidth(t)));
-				}
-			}	
-		}
-		
-		// width_vs_length
-		width_vs_length.clearDrawables();
-		for (int i = 0; i < models.size(); i++) {
-			LargeSystemDeposition m = models.get(i);
-			width_vs_length.append(i, Math.log(m.getLength()), m.getSaturatedLnw_avg());
-		}
-		// Draw linear regression
-		width_vs_length.addDrawable(lnw_vs_lnL);
-	}
-	
-	// Color palette for plotting models
-	private Color[] colors = {Color.CYAN,
-							  Color.ORANGE,
-							  Color.MAGENTA,
-							  Color.PINK,
-							  Color.YELLOW,
-							  Color.RED,
-							  Color.GREEN,
-							  Color.BLUE};
 	
 /**************************
  * DB Operation Callbacks *
@@ -429,8 +417,65 @@ public class DepositionControl extends AbstractSimulation {
  * Main *
  ********/	
 	
+	/**
+	 * Runs multiple trials. Reads in trial parameters
+	 * from a txt file.
+	 * 
+	 * @param args Not used
+	 */
 	public static void main(String[] args) {
-		SimulationControl.createApp(new DepositionControl());
+		
+		// Create Simulation
+		final DepositionControl control = new DepositionControl();
+		SimulationControl.createApp(control);
+		
+		// Read parameters
+		String filePath = DIR_DATA_ROOT + "trial_params.txt";
+		Scanner in = null;
+		try {
+			in = new Scanner(new File(filePath));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		}
+		final HashMap<String, Double> params = new HashMap<String, Double>();
+		
+		while (in.hasNext()) {
+			String line = in.nextLine();
+			System.out.println(line);
+			String[] kvPair = line.split(":\t");
+			params.put(kvPair[0], Double.parseDouble(kvPair[1]));
+		}
+		in.close();
+		
+		// Determine number of trials to run
+		remainingTrials = params.remove("numTrials").intValue();
+		clearMod = params.remove("clearMod").intValue();
+		plotAllMod = params.remove("plotAllMod").intValue();
+		
+		// Run trials recursively
+		control.initialize(params);
+		control.setAnalysisCallback(new Runnable() {
+
+			@Override
+			public void run() {
+				if (--remainingTrials > 0) {
+					
+					if ((modelId+1) % plotAllMod == 0) {
+						control.plotAll();
+					}
+					if ((modelId+1) % clearMod == 0) {
+						control.clearMemory();
+					}
+					
+					control.initialize(params);
+					control.startSimulation();
+				}
+			}
+			
+		});
+		control.startSimulation();
+		
 	}
 
 }

@@ -10,7 +10,7 @@ plementation, visualization and stati-
 stical analysis.
 ######################################
 */
-package bdm.largesystems;
+package bdm.largesystems.models;
 
 
 import java.awt.Color;
@@ -21,7 +21,9 @@ import java.util.HashMap;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
+import bdm.largesystems.EmbeddedDBArray;
 import bdm.largesystems.EmbeddedDBArray.DBOperationCallback;
+import bdm.largesystems.LinearRegression;
 
 
 public abstract class LargeSystemDeposition implements Drawable {
@@ -209,7 +211,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		return max;
 	}
 
-	protected double getParameter(String name) {
+	public double getParameter(String name) {
 		return parameters.get(name).doubleValue();
 	}
 

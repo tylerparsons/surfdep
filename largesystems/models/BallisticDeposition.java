@@ -9,7 +9,7 @@ surface deposition model based on
 the bonding of atoms. 
 ######################################
 */
-package bdm.largesystems;
+package bdm.largesystems.models;
 
 public class BallisticDeposition extends LargeSystemDeposition {
 

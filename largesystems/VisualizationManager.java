@@ -9,6 +9,8 @@ import java.util.HashMap;
 import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
 
+import bdm.largesystems.models.LargeSystemDeposition;
+
 public class VisualizationManager {
 
 	private LatticeFrame lattice;

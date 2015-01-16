@@ -13,6 +13,8 @@ package bdm.largesystems;
 
 import bdm.largesystems.EmbeddedDBArray.DBOperationCallback;
 import bdm.largesystems.LinearRegression.Function;
+import bdm.largesystems.models.BallisticDiffusionModel;
+import bdm.largesystems.models.LargeSystemDeposition;
 
 import java.io.File;
 import java.io.FileNotFoundException;

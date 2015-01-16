@@ -1,4 +1,4 @@
-package bdm.largesystems;
+package bdm.largesystems.controllers;
 
 import java.awt.Color;
 import java.sql.ResultSet;

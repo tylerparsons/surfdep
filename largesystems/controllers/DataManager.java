@@ -11,7 +11,7 @@ numerical values and saves images with
 file I/O.
 ######################################
 */
-package bdm.largesystems;
+package bdm.largesystems.controllers;
 
 import java.io.File;
 import java.io.FileWriter;

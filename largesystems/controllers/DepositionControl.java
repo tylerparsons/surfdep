@@ -9,7 +9,7 @@ iation of models, visualization, data
 analysis, UI and I/O of parameters.
 ######################################
 */
-package bdm.largesystems;
+package bdm.largesystems.controllers;
 
 import bdm.largesystems.models.BallisticDiffusionModel;
 import bdm.largesystems.models.LargeSystemDeposition;

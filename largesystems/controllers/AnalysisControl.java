@@ -131,6 +131,15 @@ public class AnalysisControl {
 		
 	}
 	
+	/**
+	 * Used to compute running averages.
+	 * @author Tyler
+	 */
+	public class Average {
+		double val;
+		int samples;
+	}
+	
 	
 /******************
  * Initialization *
@@ -179,6 +188,12 @@ public class AnalysisControl {
 		analysisFunctions.put("Scaled avg width plot", AnalysisFunction.defaultInputAf(
 			(HashMap<String, String> input) -> {
 				scaledAvgWidthPlot(new ModelGroupIdentifier(input));
+			}	
+		));
+
+		analysisFunctions.put("beta vs x plot", AnalysisFunction.defaultInputAf(
+			(HashMap<String, String> input) -> {
+				betaVsXPlot(new ModelGroupIdentifier(input));
 			}	
 		));
 		
@@ -257,8 +272,6 @@ public class AnalysisControl {
 	 */
 	public void scaledAvgWidthPlot(ModelGroupIdentifier mgi) {
 		
-		System.out.println(mgi.sqlWhereClause());
-		
 		// Setup plots
 		visManager.getWidthVsTime().setVisible(true);
 		
@@ -294,6 +307,54 @@ public class AnalysisControl {
 		
 		// Relaunch control window
 		initControlWindow();		
+		
+	}
+	
+	/**
+	 * Queries records identified by mgi, computes the 
+	 * average beta values for each distinct x and passes
+	 * the averages to 
+	 * {@link bdm.largesystems.controllers.VisualizationManager}.
+	 * @param mgi A {@link ModelGroupIdentifier}
+	 */
+	public void betaVsXPlot(ModelGroupIdentifier mgi) {
+		
+		// Query data
+		ResultSet data = selectWhere(DB_TABLE_MODELS, mgi);
+		
+		try {
+			
+			HashMap<Double, Average> beta_avg = new HashMap<Double, Average>();
+			
+			while(data.next()) {
+				
+				double x = data.getDouble("x");
+				double beta = data.getDouble("beta");
+				
+				if (beta_avg.containsKey(x)) {
+					Average avg = beta_avg.get(x);
+					avg.val = (avg.val * avg.samples + beta) / (avg.samples + 1);
+					avg.samples = avg.samples + 1;
+					beta_avg.put(x, avg);
+				}
+				else {
+					Average avg = new Average();
+					avg.val = beta;
+					avg.samples = 1;
+					beta_avg.put(x, avg);
+				}
+				
+			}
+			
+			// Pass averages to visManager to plot
+			visManager.plotBetaVsX(beta_avg);
+			
+		} catch (SQLException sqle) {
+			sqle.printStackTrace();
+		} catch (NullPointerException npe) {
+			showMessage("Null result set returned");
+			npe.printStackTrace();
+		}
 		
 	}
 	

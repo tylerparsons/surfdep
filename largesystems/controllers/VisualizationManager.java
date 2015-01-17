@@ -223,6 +223,26 @@ public class VisualizationManager {
 		width_vs_length.addDrawable(lnw_vs_lnL);
 		
 	}
+
+	/**
+	 * Plots average beta values across all x.
+	 * @param beta_avg
+	 */
+	public void plotBetaVsX(HashMap<Double, AnalysisControl.Average> beta_avg) {
+		
+		// Create new plot
+		PlotFrame beta_vs_x = new PlotFrame(
+			"x", "beta", "Average beta values across all x"
+		);
+		beta_vs_x.setVisible(true);
+		
+		// Plot averages
+		for (Double x: beta_avg.keySet()) {
+			beta_vs_x.append(0, x, beta_avg.get(x).val);
+		}
+		
+	}
+	
 	
 /*******************************************
  * Point Density Calculator				   *

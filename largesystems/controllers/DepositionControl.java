@@ -292,15 +292,11 @@ public class DepositionControl extends AbstractSimulation {
 	private double calculateAlpha() {
 		
 		//wrap lnL, lnw_avg in Functions
-		Function lnw_avg = new Function() {
-			public double val(double x) {
-				return models.get((int)x).getSaturatedLnw_avg();
-			}
+		Function lnw_avg = (double x) -> {
+			return models.get((int)x).getSaturatedLnw_avg();
 		};
-		Function lnL = new Function() {
-			public double val(double x) {
-				return Math.log(models.get((int)x).getLength());
-			}
+		Function lnL = (double x) -> {
+			return Math.log(models.get((int)x).getLength());
 		};
 		//Pass functions to regression
 		lnw_vs_lnL = new LinearRegression(lnL, lnw_avg, 0, (double)models.size()-1, 1);

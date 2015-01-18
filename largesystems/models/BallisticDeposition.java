@@ -1,28 +1,27 @@
-/*
-######################################
-BallisticDeposition.java
-@author		Tyler Parsons
-@created	7 May 2014
- 
-A re-implementation of a well known
-surface deposition model based on
-the bonding of atoms. 
-######################################
-*/
 package bdm.largesystems.models;
 
+/**
+ * BallisticDeposition.java
+ * Created:	7 May 2014
+ * @author	Tyler Parsons
+ *  
+ * A re-implementation of a well known
+ * surface deposition model based on
+ * the bonding of atoms. 
+ */
 public class BallisticDeposition extends LargeSystemDeposition {
 
-	/*
-	 * Selects a column at random and deposits
-	 * an atom there, letting it fall and bond
-	 * with the the first horizontally or ver-
-	 * tically adjacent neighbor.
-	 * */
 	public BallisticDeposition() {
 		super();
 	}
 	
+	/**
+	 * Selects a column at random and deposits
+	 * an atom there, letting it fall and bond
+	 * with the the first horizontally or ver-
+	 * tically adjacent neighbor.
+	 */
+	@Override
 	protected Point deposite() {
 		
 		int col = (int)(Math.random()*L);

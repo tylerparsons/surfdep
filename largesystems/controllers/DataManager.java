@@ -1,16 +1,3 @@
-/*
-######################################
-DepositionDataManager.java
-@author		Tyler Parsons
-@created	7 May 2014
- 
-A class that manages the recording of 
-simulation data. Automatically creates 
-a file system to store data, outputs 
-numerical values and saves images with
-file I/O.
-######################################
-*/
 package bdm.largesystems.controllers;
 
 import java.io.File;
@@ -32,6 +19,17 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Scanner;
 
+/**
+ * DepositionDataManager.java
+ * Created:	7 May 2014
+ * @author	Tyler Parsons
+ *  
+ * A class that manages the recording of 
+ * simulation data. Automatically creates 
+ * a file system to store data, outputs 
+ * numerical values and saves images with
+ * file I/O. Also saves data to MySQL db.
+ */
 public class DataManager {
 
 	private File txt;

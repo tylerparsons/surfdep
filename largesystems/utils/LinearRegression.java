@@ -1,16 +1,3 @@
-/*
-######################################
-LinearRegression.java
-@author		Tyler Parsons
-@created	7 May 2014
- 
-A class that creates a simple linear 
-regression given a function definition.
-Uses wrapper interface Function to ana-
-lyze continuous and constant functions,
-and arrays.
-######################################
-*/
 package bdm.largesystems.utils;
 
 import java.awt.Color;
@@ -19,6 +6,17 @@ import java.awt.Graphics;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
+/**
+ * LinearRegression.java
+ * Created:	7 May 2014
+ * @author	Tyler Parsons
+ *  
+ * A class that creates a simple linear 
+ * regression given a function definition.
+ * Uses wrapper interface Function to ana-
+ * lyze continuous and constant functions,
+ * and arrays.
+ */
 public class LinearRegression implements Drawable{
 	
 	protected double m;

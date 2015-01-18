@@ -14,13 +14,13 @@ import bdm.largesystems.utils.MySQLClient;
 
 /**
  * AnalysisControl.java
+ * Created:	5 January 2015
+ * @author Tyler
  * 
  * A GUI control used to run analysis
  * of the models and aggregate data.
  * Connects to the local MySQL database
  * to query and analyze past trial data.
- * 
- * @author Tyler
  */
 public class AnalysisControl {
 
@@ -355,6 +355,9 @@ public class AnalysisControl {
 			showMessage("Null result set returned");
 			npe.printStackTrace();
 		}
+		
+		// Relaunch control window
+		initControlWindow();
 		
 	}
 	

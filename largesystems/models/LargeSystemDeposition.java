@@ -1,15 +1,13 @@
-/*
-######################################
-LargeSystemDeposition.java
-@author		Tyler Parsons
-@created	7 May 2014
- 
-An abstract superclass of deposition
-models. Provides support for model im-
-plementation, visualization and stati-
-stical analysis.
-######################################
-*/
+/**
+ * LargeSystemDeposition.java
+ * Created:	7 May 2014
+ * @author	Tyler Parsons
+ *  
+ * An abstract superclass of deposition
+ * models. Provides support for model im-
+ * plementation, visualization and stati-
+ * stical analysis.
+ */
 package bdm.largesystems.models;
 
 
@@ -28,14 +26,32 @@ import bdm.largesystems.utils.LinearRegression;
 
 public abstract class LargeSystemDeposition implements Drawable {
 
+	/**
+	 * Length
+	 */
+	protected int L;
+	/**
+	 * Height
+	 */
+	protected int H;
+	/**
+	 * Slot height
+	 */
+	protected int dH;
 	
-	protected int L;	// Length
-	protected int H;	// Max height
-	protected int dH;	// Slot height
+	/**
+	 * Square lattice storing representation of surface.
+	 */
 	protected int[][] lattice;
+	/**
+	 * Array storing the height of each column.
+	 */
 	protected int[] height;
 	
-	// Stores width for systems with L*H > Integer.MAX_VALUE
+	/**
+	 * Stores width for systems with L*H >
+	 * {@link EmbeddedDBArray.MAX_ARRAY_SIZE}
+	 */
 	protected EmbeddedDBArray width;
 	protected long maxSteps;
 	
@@ -44,12 +60,22 @@ public abstract class LargeSystemDeposition implements Drawable {
 	protected int minHeight;
 	protected int maxHeight;
 	
-	protected long time;	//measured in steps
+	/**
+	 * Measured in total points deposited.
+	 */
+	protected long time;
 	
-	// Tracks whether slot has just been cleared,
-	// to prevent duplicate clearing as the first
-	// row is populated.
+	/**
+	 * Tracks whether the bottom of slot has just been
+	 * cleared, to prevent duplicate clearing as the
+	 * first row is populated.
+	 */
 	protected boolean bottomCleared;
+	/**
+	 * Tracks whether the top of slot has just been
+	 * cleared, to prevent duplicate clearing as the
+	 * first row is populated.
+	 */
 	protected boolean topCleared;
 		
 	protected HashMap<String, Double> parameters;
@@ -239,7 +265,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		};
 	}
 
-	/*
+	/**
 	 * Width follows Scaling Relation:
 	 * 		w(L, t) ~ L^a * f(t/L^(a/b)
 	 * where
@@ -252,7 +278,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * 		a = alpha = (roughness exponent),
 	 * 		b = beta = (growth exponent).
 	 * 
-	 * */
+	 */
 	public void calculateBeta(int t_0, int t_x) {
 		if (t_x <= 0)
 			return;

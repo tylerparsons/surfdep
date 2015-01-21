@@ -148,15 +148,15 @@ public class DepositionControl extends AbstractSimulation {
 	protected void doStep() {
 		
 		// Stop before model reaches maximum height
-//		if (model.getAverageHeight() > 0.9*model.getHeight()) {
-//			stopSimulation();
-//			return;
-//		}
-		
-		if (model.getTime() == EmbeddedDBArray.MAX_ARRAY_SIZE - 1) {
+		if (model.getAverageHeight() > 0.9*model.getHeight()) {
 			stopSimulation();
 			return;
 		}
+		
+//		if (model.getTime() == EmbeddedDBArray.MAX_ARRAY_SIZE - 1) {
+//			stopSimulation();
+//			return;
+//		}
 		
 		// Catch and report any exceptions without 
 		// losing simulation to runtime errors

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class EmbeddedDBArray {
 
-	final static long MAX_ARRAY_SIZE = (long)((Integer.MAX_VALUE) >> 6);
+	public final static long MAX_ARRAY_SIZE = (long)((Integer.MAX_VALUE) >> 6);
 	
 	final static int DUMMY_OFFSET = -1;
 

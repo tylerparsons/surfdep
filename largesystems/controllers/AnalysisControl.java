@@ -8,7 +8,9 @@ import java.util.LinkedHashMap;
 
 import javax.swing.JOptionPane;
 
+import bdm.largesystems.controllers.VisualizationManager.Point;
 import bdm.largesystems.utils.InputDialog;
+import bdm.largesystems.utils.LinearRegression;
 import bdm.largesystems.utils.ModelGroupIdentifier;
 import bdm.largesystems.utils.MySQLClient;
 
@@ -64,6 +66,7 @@ public class AnalysisControl {
 			"trial",
 			"modelId",
 			"L",
+			"H",
 			"x",
 			"p_diff",
 			"l_0"
@@ -140,6 +143,18 @@ public class AnalysisControl {
 		int samples;
 	}
 	
+	/**
+	 * An Integer object which is mutable
+	 * and thus the value of final objects
+	 * can be changed.
+	 * @author Tyler
+	 *
+	 */
+	public class MutableInteger {
+		public int i;
+		public MutableInteger(int I) {i = I;}
+	}
+	
 	
 /******************
  * Initialization *
@@ -194,6 +209,12 @@ public class AnalysisControl {
 		analysisFunctions.put("beta vs x plot", AnalysisFunction.defaultInputAf(
 			(HashMap<String, String> input) -> {
 				betaVsXPlot(new ModelGroupIdentifier(input));
+			}	
+		));
+
+		analysisFunctions.put("alpha plot", AnalysisFunction.defaultInputAf(
+			(HashMap<String, String> input) -> {
+				alphaPlot(new ModelGroupIdentifier(input));
 			}	
 		));
 		
@@ -356,6 +377,78 @@ public class AnalysisControl {
 			npe.printStackTrace();
 		}
 		
+		// Relaunch control window
+		initControlWindow();
+		
+	}
+	
+	/**
+	 * Queries L and lnw_avg values for the given
+	 * {@link bdm.largesystems.utils.ModelGroupIdentifier},
+	 * create a linear regression and passes it to
+	 * the member {@link VisualizationManager} along
+	 * with the points for plotting.
+	 * @param mgi A {@link ModelGroupIdentifier}
+	 */
+	public void alphaPlot(ModelGroupIdentifier mgi) {
+		
+		ResultSet data = db.query(
+			"SELECT L, lnw_avg FROM " +
+			" models WHERE " + mgi.sqlWhereClause() +
+			" ORDER BY L ASC"
+		);
+		
+		final ArrayList<Point> lnw_avgByL = 
+			new ArrayList<Point>();
+		
+		try {
+			
+			// Column indices
+			int iL = 1;
+			int iLnw_avg = 2;
+			
+			while (data.next()) {
+				
+				// Grab Data
+				int L = data.getInt(iL);
+				double lnw_avg = data.getDouble(iLnw_avg);
+				
+				// Add to list
+				lnw_avgByL.add(new Point(L, Math.log(L), lnw_avg));
+				
+			}
+			
+			// Create LinearRegression
+			LinearRegression lnw_vs_lnL = new LinearRegression(
+					// Independent variable
+					(double x) -> {
+						return lnw_avgByL.get((int)x).x;
+					},
+					// Dependent variable
+					(double x) -> {
+						return lnw_avgByL.get((int)x).y;						
+					},
+					// x_i
+					0,
+					// x_f
+					lnw_avgByL.size()-1,
+					// dx
+					1
+			);
+			
+			// Plot
+			visManager.logPlotWidthVsLength(lnw_avgByL, lnw_vs_lnL);
+			
+			// Show alpha value
+			showMessage("alpha = " + lnw_vs_lnL.m() +
+						"\nR^2 = " + lnw_vs_lnL.R2());
+			
+		} catch (SQLException sqle) {
+			sqle.printStackTrace();
+		} catch (NullPointerException npe) {
+			npe.printStackTrace();
+		}
+
 		// Relaunch control window
 		initControlWindow();
 		

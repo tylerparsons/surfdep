@@ -3,6 +3,7 @@ package bdm.largesystems.controllers;
 import java.awt.Color;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -54,6 +55,34 @@ public class VisualizationManager {
 		MarkerData(Color c, int i) {
 			color = c;	index = i;
 		}
+	}
+	
+	/**
+	 * Wraps data for plotting a point
+	 * @author Tyler
+	 */
+	public static class Point {
+		/** Dataset index */
+		public int i;
+		/** Dep. variable */
+		public double x;
+		/** Ind. variable */
+		public double y;
+		
+		public Point(int I, double X, double Y) {
+			i = I; x = X; y = Y;
+		}
+	}
+	
+	/**
+	 * Abstract conversion of Data into Point.
+	 * @author Tyler
+	 */
+	protected interface Plotter<Data> {
+		public Point getPoint(
+			int index,
+			Data data
+		);		
 	}
 	
 /******************
@@ -205,22 +234,70 @@ public class VisualizationManager {
 	 * lnw_vs_lnL
 	 * 	-> plots ln of avgerage width against ln L
 	 * 	-> runs linear regression for alpha
-	 * @param models
+	 * @param data		An ArrayList
 	 * @param lnw_vs_lnL
 	 */
-	public void logPlotWidthVsLength(
-			ArrayList<LargeSystemDeposition> models,
+	@SuppressWarnings("unchecked")
+	public <Data> void logPlotWidthVsLength(
+			ArrayList<Data> data,
 			LinearRegression lnw_vs_lnL
-	) {
+	) throws IllegalArgumentException {
 		
-		/** width_vs_length **/
+		// Clear
 		width_vs_length.clearDrawables();
-		for (int i = 0; i < models.size(); i++) {
-			LargeSystemDeposition m = models.get(i);
-			width_vs_length.append(i, Math.log(m.getLength()), m.getSaturatedLnw_avg());
+		
+		// Parse generic Data parameter to plot points
+		if (data.get(0) instanceof LargeSystemDeposition) {
+		
+			plotPointList(
+				data,
+				width_vs_length,
+				(int i, Data point) -> {
+					LargeSystemDeposition lsd = (LargeSystemDeposition)point;
+					return new Point(i, Math.log(lsd.getLength()), lsd.getSaturatedLnw_avg());
+				}
+			);
+			
 		}
+		else if (data.get(0) instanceof Point) {
+		
+			plotPointList(
+				data,
+				width_vs_length,
+				(int i, Data d) -> {
+					return (Point)d;
+				}
+			);
+						
+		}
+		else {
+			throw new IllegalArgumentException("Unsupported Data type parameter passed");
+		}
+		
+
 		// Draw linear regression
 		width_vs_length.addDrawable(lnw_vs_lnL);
+		width_vs_length.setVisible(true);
+
+	}
+	
+	/**
+	 * Abstracts iteration and plotting for
+	 * generic Data type.
+	 * @param points
+	 * @param graph
+	 * @param plotter
+	 */
+	protected <Data> void plotPointList(
+			ArrayList<Data> points,
+			PlotFrame graph,
+			Plotter<Data> plotter
+	) {
+		
+		for (int i = 0; i < points.size(); i++) {
+			Point p = plotter.getPoint(i, points.get(i));
+			graph.append(p.i, p.x, p.y);
+		}
 		
 	}
 

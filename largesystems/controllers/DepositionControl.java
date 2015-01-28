@@ -3,7 +3,6 @@ package bdm.largesystems.controllers;
 import bdm.largesystems.models.BallisticDiffusionModel;
 import bdm.largesystems.models.LargeSystemDeposition;
 import bdm.largesystems.utils.AlertDialog;
-import bdm.largesystems.utils.EmbeddedDBArray;
 import bdm.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
 import bdm.largesystems.utils.InputDialog;
 import bdm.largesystems.utils.LinearRegression;

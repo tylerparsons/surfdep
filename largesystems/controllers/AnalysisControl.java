@@ -73,6 +73,16 @@ public class AnalysisControl {
 	};
 
 
+/*************
+ * Constants *
+ *************/
+	
+	/**
+	 * Default scaling exponent.
+	 */
+	public final static double Z_DEFAULT = 2;
+	
+	public final static String DEFAULT_INPUT_MSG = "Identify models to analyze";
 	
 
 /******************
@@ -126,7 +136,7 @@ public class AnalysisControl {
 		
 		public static AnalysisFunction defaultInputAf(Analyzer analyzer) {
 			return new AnalysisFunction(
-					"Identify models to analyze",
+					AnalysisControl.DEFAULT_INPUT_MSG,
 					AnalysisControl.COMPLETE_MODEL_PARAMS,
 					analyzer
 			);
@@ -200,9 +210,22 @@ public class AnalysisControl {
 			}
 		));
 
-		analysisFunctions.put("Scaled avg width plot", AnalysisFunction.defaultInputAf(
+		analysisFunctions.put("Scaled avg width plot", new AnalysisFunction(
+			AnalysisControl.DEFAULT_INPUT_MSG,
+			new String[] {	// Default params plus z minus H
+				"trial",
+				"modelId",
+				"L",
+				"x",
+				"z",
+				"p_diff",
+				"l_0"
+			},
 			(HashMap<String, String> input) -> {
-				scaledAvgWidthPlot(new ModelGroupIdentifier(input));
+				String zStr; double z = 2;	// Default z
+				if ((zStr = input.remove("z")) != null && !zStr.equals(""))
+					z = Double.parseDouble(zStr);
+				scaledAvgWidthPlot(new ModelGroupIdentifier(input), z);
 			}	
 		));
 
@@ -290,8 +313,10 @@ public class AnalysisControl {
 	 * Initiates an {@link InputDialog} to request
 	 * parameters and then displays a scaled average
 	 * width plot.
+	 *
+	 * @param z scaling exponent alpha/beta
 	 */
-	public void scaledAvgWidthPlot(ModelGroupIdentifier mgi) {
+	public void scaledAvgWidthPlot(ModelGroupIdentifier mgi, double z) {
 		
 		// Setup plots
 		visManager.getWidthVsTime().setVisible(true);
@@ -317,7 +342,7 @@ public class AnalysisControl {
 			}
 			
 			// Delegate plotting to visManager
-			visManager.scaledAvgWidthPlot(lengthList, data);
+			visManager.scaledAvgWidthPlot(lengthList, data, z);
 
 		} catch (SQLException sqle) {
 			sqle.printStackTrace();
@@ -388,6 +413,7 @@ public class AnalysisControl {
 	 * create a linear regression and passes it to
 	 * the member {@link VisualizationManager} along
 	 * with the points for plotting.
+	 * 
 	 * @param mgi A {@link ModelGroupIdentifier}
 	 */
 	public void alphaPlot(ModelGroupIdentifier mgi) {

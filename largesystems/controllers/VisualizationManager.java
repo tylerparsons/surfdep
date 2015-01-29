@@ -3,7 +3,6 @@ package bdm.largesystems.controllers;
 import java.awt.Color;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -180,10 +179,15 @@ public class VisualizationManager {
 	}
 	
 	/**
-	 * @param lengths
-	 * @param data
+	 * Scales the average width data using the scaling exponent
+	 * {@code z} and plots the result. Different t regions of the
+	 * plot should collapse, or coincide for different z.
+	 * 
+	 * @param lengths distinct system lengths in {@code data}.
+	 * @param data	SQL query result data
+	 * @param z scaling exponent equal to alpha/beta
 	 */
-	public void scaledAvgWidthPlot(ArrayList<Integer> lengths, ResultSet data) {
+	public void scaledAvgWidthPlot(ArrayList<Integer> lengths, ResultSet data, double z) {
 		
 		// Generate color map of lengths to java.awt.Colors
 		HashMap<Integer, MarkerData> colorMap = new HashMap<Integer, MarkerData>();
@@ -216,7 +220,7 @@ public class VisualizationManager {
 					// Add to PlotFrame
 					width_vs_time.append(
 							md.index,
-							Math.log(t/((double)(L*L))),
+							Math.log(t/(Math.pow(L, z))),
 							Math.log(w/Math.sqrt(L))
 					);
 					
@@ -237,7 +241,6 @@ public class VisualizationManager {
 	 * @param data		An ArrayList
 	 * @param lnw_vs_lnL
 	 */
-	@SuppressWarnings("unchecked")
 	public <Data> void logPlotWidthVsLength(
 			ArrayList<Data> data,
 			LinearRegression lnw_vs_lnL

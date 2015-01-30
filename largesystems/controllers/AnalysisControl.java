@@ -212,9 +212,7 @@ public class AnalysisControl {
 
 		analysisFunctions.put("Scaled avg width plot", new AnalysisFunction(
 			AnalysisControl.DEFAULT_INPUT_MSG,
-			new String[] {	// Default params plus z minus H
-				"trial",
-				"modelId",
+			new String[] {	// Default params plus z minus H, trial, modelId
 				"L",
 				"x",
 				"z",
@@ -222,7 +220,7 @@ public class AnalysisControl {
 				"l_0"
 			},
 			(HashMap<String, String> input) -> {
-				String zStr; double z = 2;	// Default z
+				String zStr; double z = Z_DEFAULT;
 				if ((zStr = input.remove("z")) != null && !zStr.equals(""))
 					z = Double.parseDouble(zStr);
 				scaledAvgWidthPlot(new ModelGroupIdentifier(input), z);
@@ -361,6 +359,7 @@ public class AnalysisControl {
 	 * average beta values for each distinct x and passes
 	 * the averages to 
 	 * {@link bdm.largesystems.controllers.VisualizationManager}.
+	 * 
 	 * @param mgi A {@link ModelGroupIdentifier}
 	 */
 	public void betaVsXPlot(ModelGroupIdentifier mgi) {

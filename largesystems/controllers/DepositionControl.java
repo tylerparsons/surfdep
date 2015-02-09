@@ -49,6 +49,7 @@ public class DepositionControl extends AbstractSimulation {
 	// Driectory in which simulation data is stored
 	private final static String DIR_DATA_ROOT = "data\\";
 
+	public long pointsConsidered = 0;
 	
 /**************************
  * Initialization Methods *
@@ -171,15 +172,21 @@ public class DepositionControl extends AbstractSimulation {
 		// given by point modulus, which is intended
 		// to prevent overflow of points on the plot
 		// frame
-		long time = model.getTime();
-		long mod = visManager.pointModulus(time, model.getLength());
-		if(time%mod == 0) {
-			// Plot
-			visManager.logPlotWidth(model.getLength(), Math.log(time),
-								 Math.log(model.getWidth(time)));
-			// Save average width for this model type
-			// for future scaled plots
-			dataManager.updateW_avg(model);
+		long t = model.getTime();
+		if (model.measure(t)) {
+			long mod = visManager.staticPointModulus(model.getHeight());
+			if(pointsConsidered++ % mod == 0
+			|| t < visManager.expectedT_cross(model.getLength())) {
+				// Plot using h_avg time scaling				
+				visManager.logPlotWidth(
+						model.getLength(),
+						Math.log(model.getScaledTime()),
+						Math.log(model.getWidth(model.getScaledTime()))
+				);
+				// Save average width for this model type
+				// for future scaled plots
+				dataManager.updateScaledW_avg(model);
+			}
 		}
 	}
 	
@@ -241,7 +248,7 @@ public class DepositionControl extends AbstractSimulation {
 		//Wrap data in Parameters to pass to dataManager as list
 		HashMap<String, Double> addlParams = new HashMap<String, Double>();
 		addlParams.put("h_avg", new Double(model.getAverageHeight()));
-		addlParams.put("w", new Double(model.getWidth(model.getTime())));
+		addlParams.put("w", new Double(model.getWidth(model.getScaledTime())));
 		addlParams.put("t", new Double(model.getTime()));
 		addlParams.put("t_0", new Double(t_0));
 		addlParams.put("t_x1", new Double(t_x1));

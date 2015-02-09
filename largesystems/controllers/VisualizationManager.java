@@ -164,7 +164,7 @@ public class VisualizationManager {
 			
 			for (long t = 1; t <= time; t++) {
 				
-				long mod = pointModulus(t, m.getLength())*models.size();
+				long mod = dynamicPointModulus(t, m.getLength())*models.size();
 				
 				if (t % mod == 0) {
 					width_vs_time.append(
@@ -335,7 +335,7 @@ public class VisualizationManager {
  *    plotting for very large t			   *
  *******************************************/
 	
-	private long expectedT_cross(int L) {
+	public long expectedT_cross(int L) {
 		return (long) Math.pow(L, alphaOverBeta);
 	}
 	
@@ -361,15 +361,25 @@ public class VisualizationManager {
 
 	/**
 	 * Determines the phase of the deposition at time t
-	 * and selects the appropriate point modulus.
+	 * and selects the appropriate point modulus based
+	 * on system size.
 	 * @param t time
 	 * @return point modulus
 	 */
-	public long pointModulus(long t, int L) {
+	public long dynamicPointModulus(long t, int L) {
 		if (t < expectedT_cross(L)) {
 			return growthModulus(t);
 		}
 		return saturationModulus(t);
+	}
+	
+	/**
+	 * Computes a simple, constant point modulus.
+	 * @param N number of total points
+	 * @return (N/10000) + 1
+	 */
+	public long staticPointModulus(int N) {
+		return (long)(N/10000) + 1;
 	}
 	
 /***********

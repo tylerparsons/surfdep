@@ -15,6 +15,9 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.lang.Math;
 import java.util.HashMap;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
@@ -26,6 +29,11 @@ import bdm.largesystems.utils.LinearRegression;
 
 public abstract class LargeSystemDeposition implements Drawable {
 
+
+/********************
+ * Model Properties *
+ ********************/
+	
 	/**
 	 * Length
 	 */
@@ -38,15 +46,14 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * Slot height
 	 */
 	protected int dH;
-	
-	/**
-	 * Square lattice storing representation of surface.
-	 */
-	protected int[][] lattice;
 	/**
 	 * Array storing the height of each column.
 	 */
 	protected int[] height;
+	/**
+	 * Map storing other model parameters.
+	 */
+	protected HashMap<String, Double> parameters;
 	
 	/**
 	 * Stores width for systems with L*H >
@@ -55,15 +62,46 @@ public abstract class LargeSystemDeposition implements Drawable {
 	protected EmbeddedDBArray width;
 	protected long maxSteps;
 	
-	
-	protected double averageHeight;
+	protected long last_h_avg;
+	protected double h_avg;
 	protected int minHeight;
 	protected int maxHeight;
 	
+/****************
+ * Time Scaling *	
+ ****************/
+
 	/**
 	 * Measured in total points deposited.
 	 */
 	protected long time;
+	
+	/**
+	 * Determines whether a measurement of the width
+	 * should be conducted at the given time. It can
+	 * be implemented in a variety of ways to enable
+	 * different definitions of time scales.
+	 */
+	protected Predicate<Long> measurementScheduler; 
+	
+	/**
+	 * Called when measurementScheduler returns true.
+	 */
+	protected Consumer<Long> measurementCallback;
+	
+	/**
+	 * Provides acces to scaled time.
+	 */
+	protected Supplier<Long> timeScaler;
+	
+/******************
+ * Slot Variables *	
+ ******************/
+	
+	/**
+	 * Square lattice storing representation of surface.
+	 */
+	protected int[][] lattice;
 	
 	/**
 	 * Tracks whether the bottom of slot has just been
@@ -77,21 +115,42 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * first row is populated.
 	 */
 	protected boolean topCleared;
-		
-	protected HashMap<String, Double> parameters;
 	
-	//super() must be called in all constructor overloads!
+
+/******************
+ * Initialization *
+ ******************/
+	
+	/**
+	 * Constructs a LargeSystemDeposition with h_avg time scaling.
+	 * super() must be called in all constructor overloads!
+	 */
 	public LargeSystemDeposition() {
+		
+		// Set default parameters
 		parameters = new HashMap<String, Double>();
 		setParameter("L", 256);
 		setParameter("H", 524288);
 		setParameter("dH", 2048);
+		
+		// Setup default time scaling
+		setHavgTimeScale();
+	}
+	
+	/**
+	 * Initializes model for h_avg time scaling.
+	 * @param params contains updated parameters input by user
+	 */
+	public void init(HashMap<String, Double> params) {
+		init(params, (int)getParameter("H"));
 	}
 	
 	/**
 	 * @param params contains updated parameters input by user
+	 * @param N	max size of member
+	 * 			{@link bdm.largesystems.utils.EmbeddedDBArray}.
 	 */
-	public void init(HashMap<String, Double> params) {
+	public void init(HashMap<String, Double> params, int N) {
 		
 		parameters = params;
 		L = (int)getParameter("L");
@@ -100,7 +159,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		height = new int[L];
 		
 		// Define an array to store width values
-		maxSteps = ((long)L)*((long)H);
+		maxSteps = (N);
 		width = new EmbeddedDBArray(maxSteps);
 		
 		time = -1L;	//Incremented once before used
@@ -117,7 +176,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		time++;
 
 		// Select deposition location
-		Point p = deposite();
+		Point p = deposit();
 		
 		// Clear one half of slot after preceding half fills
 		if (!bottomCleared && (p.y % dH) == 0) {
@@ -131,27 +190,31 @@ public abstract class LargeSystemDeposition implements Drawable {
 			bottomCleared = false;
 		}
 		
-		// TODO debug
 		// Analyze topography when occupied site is selected
-		if (getBit(p.x, p.y) == 1) {
-			System.out.println("Attempting to deposite in occupied site ("+p.x+", "+p.y+")!");
+//		if (getBit(p.x, p.y) == 1) {
+//			System.out.println("Attempting to deposite in occupied site ("+p.x+", "+p.y+")!");
 //			printLocalTopography(p.x, p.y, 4, 4);
-		}
+//		}
 		
 		// Populate site determined by subclass		
 		setBit(p.x, p.y);
 		height[p.x] = p.y;
 		
-		// Calculate and store snapshot of system after each step
+		// Callback invoked before next step
+		onMeasure(time);
+		
+		// Calculate and store snapshot of system
 		analyzeHeight();
-		recordWidth(width());
+		if (measure(time)) {
+			recordWidth(width());
+		}
 		
 	}
 	
-	/*
-	 * Override this method to deposite point.
-	 * */
-	protected abstract Point deposite();
+	/**
+	 * Override this method to deposit point.
+	 */
+	protected abstract Point deposit();
 	
 	
 /*******************
@@ -203,7 +266,28 @@ public abstract class LargeSystemDeposition implements Drawable {
 	
 /******************
  * Helper Methods *
- ******************/	
+ ******************/
+	
+	public boolean measure(long t) {
+		return measurementScheduler.test(t);
+	}
+	
+	public void onMeasure(long t) {
+		measurementCallback.accept(t);
+	}
+	
+	public long getScaledTime() {
+		return timeScaler.get();
+	}
+	
+	public void setHavgTimeScale() {
+		// Measure when (int)h_avg increments
+		measurementScheduler = (Long t) -> {return (int)h_avg > last_h_avg;};
+		// Store last h_avg value
+		measurementCallback = (Long t) -> last_h_avg = (int)h_avg;
+		// Return current h_avg
+		timeScaler = () -> {return last_h_avg;};
+	}
 	
 	protected boolean isValid(int x, int y) {
 		return !((x < 0 || x >= L) || (y < 0 || y >= H));
@@ -220,7 +304,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 		return false;
 	}
 	
-	/*
+	/**
 	 * Given a range of columms, return the max
 	 * value of height within the range.
 	 */
@@ -289,9 +373,9 @@ public abstract class LargeSystemDeposition implements Drawable {
 	//Calculate saturatedLnw_avg during saturation
 	public void calculateSaturatedLnw_avg (long t_x) {
 		double sum = 0;
-		for (long t = t_x; t < time; t++)
+		for (long t = t_x; t < last_h_avg; t++)
 			sum += getWidth(t);
-		saturatedLnw_avg = (double)Math.log((sum)/((double)(time-t_x)));
+		saturatedLnw_avg = (double)Math.log((sum)/((double)(last_h_avg-t_x)));
 	}
 	
 	// Calculate max, min and avg height
@@ -306,14 +390,14 @@ public abstract class LargeSystemDeposition implements Drawable {
 				maxHeight = height[i];
 			sum += height[i];
 		}
-		averageHeight = ((double)sum)/((double)L);
+		h_avg = ((double)sum)/((double)L);
 	}
 	
 	// Instantaneous "width" of the surface
 	public double width() {
 		double sum = 0;
 		for (int i = 0; i < L; i++)
-			sum += (height[i]-averageHeight)*(height[i]-averageHeight);
+			sum += (height[i]-h_avg)*(height[i]-h_avg);
 		return (double)Math.sqrt(sum/(double)L);
 	}
 	
@@ -406,7 +490,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	public double getBeta()						{return beta;}
 	public double getAtomicLength()				{return atomicLength;}
 	public double getAtomicHeight()				{return atomicHeight;}
-	public double getAverageHeight()			{return averageHeight;}
+	public double getAverageHeight()			{return h_avg;}
 	public double getSaturatedLnw_avg()			{return saturatedLnw_avg;}
 	public double getXSpacing()					{return xSpacing;}
 	public double getYSpacing()					{return ySpacing;}

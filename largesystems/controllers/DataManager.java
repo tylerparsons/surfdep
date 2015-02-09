@@ -47,6 +47,7 @@ public class DataManager {
 	
 	private final static String DB_TABLE_MODELS = "models";
 	private final static String DB_TABLE_AVERAGES = "averages";
+	private final static String DB_TABLE_SCALED_AVERAGES = "scaled_averages";
 	
 	public DataManager (String idLogPath, String txtPath, String csvPath) {
 		idLog = new File(idLogPath);
@@ -315,6 +316,73 @@ public class DataManager {
 				
 				db.exec(
 					"UPDATE " + DB_TABLE_AVERAGES +
+					" SET " + assignments +
+					" WHERE " + whereClause
+				);
+				
+			}
+			
+		} catch (SQLException e) { 
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void updateScaledW_avg(LargeSystemDeposition model) {
+		
+		// Query current average value
+		
+		String whereClause = 
+			"h_avg=" + model.getScaledTime() + " AND " +
+			"L=" + model.getLength() + " AND " +
+			"x=" + model.getParameter("x") + " AND " +
+			"p_diff=" + model.getParameter("p_diff") + " AND " +
+			"l_0=" + model.getParameter("l_0");
+		
+		ResultSet results = db.query(
+			"SELECT w_avg, S FROM " + DB_TABLE_SCALED_AVERAGES +
+			" WHERE " + whereClause
+		);
+		
+		try {
+				
+			// Insert new record if none exists
+			if(results == null || !results.first()) {
+				
+				String columns = "(h_avg,w_avg,L,x,p_diff,l_0,S)";
+				
+				String values = 
+					model.getScaledTime() + "," +
+					model.getWidth(model.getScaledTime()) + "," +
+					model.getLength() + "," +
+					model.getParameter("x") + "," +
+					model.getParameter("p_diff") + "," +
+					model.getParameter("l_0") + 
+					",1";	// Number of samples
+				
+				db.exec(
+					"INSERT INTO " + DB_TABLE_SCALED_AVERAGES +
+					" " + columns + " VALUES (" +
+					values + ")"
+				);
+				
+			}
+			// Update existing record
+			else {
+				
+				// Obtain w_avg, samples from results
+				double w_avg = results.getDouble("w_avg");
+				int S = results.getInt("S");
+				
+				// Calculate running average
+				w_avg = (w_avg*S + model.getWidth(model.getScaledTime()))/(S+1);
+				
+				String assignments = 
+					"w_avg=" + w_avg +
+					", S=" + (S+1);
+				
+				db.exec(
+					"UPDATE " + DB_TABLE_SCALED_AVERAGES +
 					" SET " + assignments +
 					" WHERE " + whereClause
 				);

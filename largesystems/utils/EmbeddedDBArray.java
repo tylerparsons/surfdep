@@ -71,7 +71,7 @@ public class EmbeddedDBArray {
 		dbClient = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
 		dbClient.clearWidthTable();
 	
-		local = new double[(int)MAX_ARRAY_SIZE];
+		local = new double[(int)(suggestedCapacity < MAX_ARRAY_SIZE ? suggestedCapacity : MAX_ARRAY_SIZE)];
 		
 		int listSize = (int)(suggestedCapacity/MAX_ARRAY_SIZE) + 1;
 		changeList = new ArrayList<Boolean>(listSize);

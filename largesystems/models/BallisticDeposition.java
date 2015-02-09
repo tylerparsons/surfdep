@@ -22,7 +22,7 @@ public class BallisticDeposition extends LargeSystemDeposition {
 	 * tically adjacent neighbor.
 	 */
 	@Override
-	protected Point deposite() {
+	protected Point deposit() {
 		
 		int col = (int)(Math.random()*L);
 		int h = localMaxHeight(col - 1, col + 1);

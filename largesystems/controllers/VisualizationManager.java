@@ -185,9 +185,14 @@ public class VisualizationManager {
 	 * 
 	 * @param lengths distinct system lengths in {@code data}.
 	 * @param data	SQL query result data
+	 * @param nPoints total points to be plotted
 	 * @param z scaling exponent equal to alpha/beta
 	 */
-	public void scaledAvgWidthPlot(ArrayList<Integer> lengths, ResultSet data, double z) {
+	public void scaledAvgWidthPlot(
+			ArrayList<Integer> lengths,
+			ResultSet data,
+			int nPoints, double z
+	) {
 		
 		// Generate color map of lengths to java.awt.Colors
 		HashMap<Integer, MarkerData> colorMap = new HashMap<Integer, MarkerData>();
@@ -197,16 +202,19 @@ public class VisualizationManager {
 		// Clear Plot Frame
 		width_vs_time.clearData();
 		
+		// Determine point mod
+		int mod = (int) staticPointModulus(nPoints);
+		
 		try {
 		
 			int p = 0, i = 0;	// points plotted, iterations taken
 			while (data.next() && p < 10000) {
 				
 				// Plot every numLengths points
-				if (i++ % lengths.size() == 0) {
+				if (i++ % mod == 0) {
 				
-					// Grab data points
-					long t = data.getLong("t");
+					// Grab data points, using h_avg time scaling
+					long t = data.getLong("h_avg");
 					int L = data.getInt("L");
 					double w = data.getDouble("w_avg");
 					
@@ -277,7 +285,6 @@ public class VisualizationManager {
 			throw new IllegalArgumentException("Unsupported Data type parameter passed");
 		}
 		
-
 		// Draw linear regression
 		width_vs_length.addDrawable(lnw_vs_lnL);
 		width_vs_length.setVisible(true);
@@ -378,8 +385,8 @@ public class VisualizationManager {
 	 * @param N number of total points
 	 * @return (N/10000) + 1
 	 */
-	public long staticPointModulus(int N) {
-		return (long)(N/10000) + 1;
+	public long staticPointModulus(long N) {
+		return (N/10000) + 1;
 	}
 	
 /***********

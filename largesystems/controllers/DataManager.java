@@ -48,6 +48,7 @@ public class DataManager {
 	private final static String DB_TABLE_MODELS = "models";
 	private final static String DB_TABLE_AVERAGES = "averages";
 	private final static String DB_TABLE_SCALED_AVERAGES = "scaled_averages";
+	private final static String DB_TABLE_LOG_AVERAGES = "logarithmic_averages";
 	
 	public DataManager (String idLogPath, String txtPath, String csvPath) {
 		idLog = new File(idLogPath);
@@ -217,6 +218,13 @@ public class DataManager {
 	};
 	
 	/**
+	 * Fields to ignore while saving model to db
+	 */
+	private String[] ignoredModelFields = {
+			"A"
+	};
+	
+	/**
 	 * Cleans inputs to protect from a variety
 	 * of syntax errors
 	 * @param raw	A potentially unclean string
@@ -238,14 +246,17 @@ public class DataManager {
 		
 		// Add trial param
 		addlParams.put("trial", (double)outputId);
+		HashMap<String, Double> modelParams = new HashMap<>(model.parameters());
 		
 		// Generate insert statement
 		String columns = "";
 		String values = "";
 		// Parse model params
-		for (String key: model.parameters().keySet()) {
+		for (String ignoredKey: ignoredModelFields)
+			modelParams.remove(ignoredKey);
+		for (String key: modelParams.keySet()) {
 			columns += key + ",";
-			values += cleanInput(""+model.parameters().get(key)) + ",";
+			values += cleanInput(""+modelParams.get(key)) + ",";
 		}
 		// Parse addlParams
 		for (String key: addlParams.keySet()) {
@@ -328,7 +339,7 @@ public class DataManager {
 		
 	}
 	
-	public void updateScaledW_avg(LargeSystemDeposition model) {
+	public void updateScaledW_avg(LargeSystemDeposition model, double w_avg, int S) {
 		
 		// Query current average value
 		
@@ -353,12 +364,12 @@ public class DataManager {
 				
 				String values = 
 					model.getScaledTime() + "," +
-					model.getWidth(model.getScaledTime()) + "," +
+					w_avg + "," +
 					model.getLength() + "," +
 					model.getParameter("x") + "," +
 					model.getParameter("p_diff") + "," +
 					model.getParameter("l_0") + 
-					",1";	// Number of samples
+					","+S;	// Number of samples
 				
 				db.exec(
 					"INSERT INTO " + DB_TABLE_SCALED_AVERAGES +
@@ -371,18 +382,95 @@ public class DataManager {
 			else {
 				
 				// Obtain w_avg, samples from results
-				double w_avg = results.getDouble("w_avg");
-				int S = results.getInt("S");
+				double w_avg0 = results.getDouble("w_avg");
+				int S0 = results.getInt("S");
 				
 				// Calculate running average
-				w_avg = (w_avg*S + model.getWidth(model.getScaledTime()))/(S+1);
+				w_avg = (w_avg0*S0 + model.getWidth(model.getScaledTime()))/(S0+S);
 				
 				String assignments = 
 					"w_avg=" + w_avg +
-					", S=" + (S+1);
+					", S=" + (S0+S);
 				
 				db.exec(
 					"UPDATE " + DB_TABLE_SCALED_AVERAGES +
+					" SET " + assignments +
+					" WHERE " + whereClause
+				);
+				
+			}
+			
+		} catch (SQLException e) { 
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void updateScaledW_avg(LargeSystemDeposition model) {
+		updateScaledW_avg(model, model.getWidth(model.getScaledTime()), 1);
+	}
+
+	public void updateAverages(LargeSystemDeposition model) {
+
+		// Look for current average value
+		String whereClause = 
+			"t=" + model.getTime() + " AND " +
+			"L=" + model.getLength() + " AND " +
+			"x=" + model.getParameter("x") + " AND " +
+			"p_diff=" + model.getParameter("p_diff") + " AND " +
+			"l_0=" + model.getParameter("l_0");
+		
+		ResultSet results = db.query(
+			"SELECT w_avg, h_avg, S FROM " + DB_TABLE_LOG_AVERAGES +
+			" WHERE " + whereClause
+		);
+		
+		try {
+				
+			// Insert new record if none exists
+			if(results == null || !results.first()) {
+				
+				String columns = "(t,w_avg,h_avg,L,x,p_diff,l_0,S,A)";
+				
+				String values = 
+					model.getTime() + "," +
+					model.getWidth(model.getTime()) + "," +
+					model.getAverageHeight() + "," +
+					model.getLength() + "," +
+					model.getParameter("x") + "," +
+					model.getParameter("p_diff") + "," +
+					model.getParameter("l_0") + 
+					",1" +	// Number of samples
+					"," + model.getParameter("A");
+				
+				db.exec(
+					"INSERT INTO " + DB_TABLE_LOG_AVERAGES +
+					" " + columns + " VALUES (" +
+					values + ")"
+				);
+				
+			}
+			// Update existing record
+			else {
+				
+				// Obtain w_avg, samples from results
+				double w_avg = results.getDouble("w_avg");
+				double h_avg = results.getDouble("h_avg");
+				int S = results.getInt("S");
+				double A = model.getParameter("A");
+				
+				// Calculate running average
+				w_avg = (w_avg*S + model.getWidth(model.getTime()))/(S+1);
+				h_avg = (h_avg*S + model.getAverageHeight())/(S+1);
+				
+				String assignments = 
+					"w_avg=" + w_avg + "," +
+					"h_avg=" + h_avg + "," +
+					"S=" 	 + (S+1) + "," +
+					"A="     + A;
+				
+				db.exec(
+					"UPDATE " + DB_TABLE_LOG_AVERAGES +
 					" SET " + assignments +
 					" WHERE " + whereClause
 				);

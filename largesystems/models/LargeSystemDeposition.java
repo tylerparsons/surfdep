@@ -62,7 +62,6 @@ public abstract class LargeSystemDeposition implements Drawable {
 	protected EmbeddedDBArray width;
 	protected long maxSteps;
 	
-	protected long last_h_avg;
 	protected double h_avg;
 	protected int minHeight;
 	protected int maxHeight;
@@ -82,17 +81,27 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * be implemented in a variety of ways to enable
 	 * different definitions of time scales.
 	 */
-	protected Predicate<Long> measurementScheduler; 
+	protected Predicate<Long> measurementScheduler;
 	
 	/**
-	 * Called when measurementScheduler returns true.
+	 * Determines whether this model's quantities should
+	 * be averaged for the given t.
 	 */
-	protected Consumer<Long> measurementCallback;
+	protected Predicate<Long> averageScheduler; 
 	
 	/**
-	 * Provides acces to scaled time.
+	 * Called during step returns true.
+	 */
+	protected Consumer<Long> stepCallback;
+	
+	/**
+	 * Provides access to scaled time.
 	 */
 	protected Supplier<Long> timeScaler;
+	
+	// Stores last integer value of certain parameters
+	protected long last_h_avg;
+	protected int last_scaled_ln_t;
 	
 /******************
  * Slot Variables *	
@@ -121,28 +130,33 @@ public abstract class LargeSystemDeposition implements Drawable {
  * Initialization *
  ******************/
 	
+	/**S
+	 * super() must be called in all constructor overloads!
+	 */
+	public LargeSystemDeposition() {
+		initParams();
+		setDefaultTimeScale(1);
+	}
+	
 	/**
 	 * Constructs a LargeSystemDeposition with h_avg time scaling.
 	 * super() must be called in all constructor overloads!
 	 */
-	public LargeSystemDeposition() {
-		
+	public LargeSystemDeposition(double averageFactor) {
 		// Set default parameters
-		parameters = new HashMap<String, Double>();
-		setParameter("L", 256);
-		setParameter("H", 524288);
-		setParameter("dH", 2048);
-		
-		// Setup default time scaling
-		setHavgTimeScale();
+		initParams();
+		// Store averageFactor
+		parameters.put("A", averageFactor);
+		// Time scaling
+		setLogarithmicTimeScale(averageFactor);
 	}
 	
 	/**
-	 * Initializes model for h_avg time scaling.
+	 * Initializes model for default time scaling.
 	 * @param params contains updated parameters input by user
 	 */
 	public void init(HashMap<String, Double> params) {
-		init(params, (int)getParameter("H"));
+		init(params, ((int)getParameter("L"))*(int)getParameter("H"));
 	}
 	
 	/**
@@ -152,7 +166,8 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 */
 	public void init(HashMap<String, Double> params, int N) {
 		
-		parameters = params;
+		for (String key: params.keySet())
+			parameters.put(key, params.get(key));
 		L = (int)getParameter("L");
 		H = (int)getParameter("H");
 		dH = (int)getParameter("dH");
@@ -172,8 +187,21 @@ public abstract class LargeSystemDeposition implements Drawable {
 		initDrawingParams();
 	}
 	
+	/**
+	 * Constructs params and adds params with a
+	 * default value.
+	 */
+	public void initParams() {
+		parameters = new HashMap<String, Double>();
+		setParameter("L", 256);
+		setParameter("H", 524288);
+		setParameter("dH", 2048);		
+	}
+	
 	public final void step() {
-		time++;
+		
+		// Callback invoked before next step
+		onStep(time++);
 
 		// Select deposition location
 		Point p = deposit();
@@ -190,18 +218,9 @@ public abstract class LargeSystemDeposition implements Drawable {
 			bottomCleared = false;
 		}
 		
-		// Analyze topography when occupied site is selected
-//		if (getBit(p.x, p.y) == 1) {
-//			System.out.println("Attempting to deposite in occupied site ("+p.x+", "+p.y+")!");
-//			printLocalTopography(p.x, p.y, 4, 4);
-//		}
-		
 		// Populate site determined by subclass		
 		setBit(p.x, p.y);
 		height[p.x] = p.y;
-		
-		// Callback invoked before next step
-		onMeasure(time);
 		
 		// Calculate and store snapshot of system
 		analyzeHeight();
@@ -229,13 +248,18 @@ public abstract class LargeSystemDeposition implements Drawable {
 		lattice[y%dH][x/32] |= (1 << (x%32));
 	}
 
-	// Clears the bottom half of the slot
+	/**
+	 *  Clears the bottom half of the slot
+	 */
 	protected void clearBottom() {
 		for(int y = 0; y < dH/2; y++)
 			for(int x = 0; x < L/32; x++)
 				lattice[y][x] = 0;
 	}
-	
+
+	/**
+	 *  Clears the top half of the slot
+	 */
 	protected void clearTop() {
 		for(int y = dH/2; y < dH; y++)
 			for(int x = 0; x < L/32; x++)
@@ -272,8 +296,12 @@ public abstract class LargeSystemDeposition implements Drawable {
 		return measurementScheduler.test(t);
 	}
 	
-	public void onMeasure(long t) {
-		measurementCallback.accept(t);
+	public void onStep(long t) {
+		stepCallback.accept(t);
+	}
+	
+	public boolean takeAverage(long t) {
+		return averageScheduler.test(t);
 	}
 	
 	public long getScaledTime() {
@@ -284,9 +312,37 @@ public abstract class LargeSystemDeposition implements Drawable {
 		// Measure when (int)h_avg increments
 		measurementScheduler = (Long t) -> {return (int)h_avg > last_h_avg;};
 		// Store last h_avg value
-		measurementCallback = (Long t) -> last_h_avg = (int)h_avg;
+		stepCallback = (Long t) -> last_h_avg = (int)h_avg;
 		// Return current h_avg
 		timeScaler = () -> {return last_h_avg;};
+		// Same as measurement
+		averageScheduler = (Long t) -> {return (int)h_avg > last_h_avg;};
+	}
+	
+	public void setLogarithmicTimeScale(double averageFactor) {
+		// Measure when (int)h_avg increments
+		measurementScheduler = (Long t) -> {return true;};
+		// Store last h_avg value
+		stepCallback = (Long t) -> {
+			last_scaled_ln_t =  (int)(Math.log(t)/averageFactor);
+		};
+		// Return current h_avg
+		timeScaler = () -> {return time;};
+		// Same as measurement
+		averageScheduler = (Long t) -> {
+			return (int)(Math.log(t)/averageFactor) > last_scaled_ln_t;
+		};
+	}
+	
+	public void setDefaultTimeScale(int mod) {
+		// Measure every averageFactor depositions
+		measurementScheduler = (Long t) -> {return true;};
+		// Do nothingreturn (int)h_avg > last_h_avg;
+		stepCallback = (Long t) -> {};
+		// Return current (long)h_avg
+		timeScaler = () -> {return time;};
+		// Every mod measurements
+		averageScheduler = (Long t) -> {return time % (long)mod == 0;};
 	}
 	
 	protected boolean isValid(int x, int y) {
@@ -370,15 +426,20 @@ public abstract class LargeSystemDeposition implements Drawable {
 		beta = lnw_vs_lnt.m();
 	}
 	
-	//Calculate saturatedLnw_avg during saturation
+	/** 
+	 * Calculate saturatedLnw_avg during saturation
+	 * @param t_x
+	 */
 	public void calculateSaturatedLnw_avg (long t_x) {
 		double sum = 0;
-		for (long t = t_x; t < last_h_avg; t++)
+		for (long t = t_x; t < time; t++)
 			sum += getWidth(t);
-		saturatedLnw_avg = (double)Math.log((sum)/((double)(last_h_avg-t_x)));
+		saturatedLnw_avg = (double)Math.log((sum)/((double)(time-t_x)));
 	}
 	
-	// Calculate max, min and avg height
+	/**
+	 * Calculate max, min and avg height
+	 */
 	public void analyzeHeight() {
 		int sum = 0;
 		minHeight = height[0];
@@ -393,7 +454,10 @@ public abstract class LargeSystemDeposition implements Drawable {
 		h_avg = ((double)sum)/((double)L);
 	}
 	
-	// Instantaneous "width" of the surface
+	/**
+	 *  Instantaneous "width" of the surface
+	 * @return
+	 */
 	public double width() {
 		double sum = 0;
 		for (int i = 0; i < L; i++)
@@ -441,7 +505,13 @@ public abstract class LargeSystemDeposition implements Drawable {
 		}
 	}
 	
-	// Scales an initialValue by a factor of 1/2*(latticeSize/scale)
+	/**
+	 *  Scales an initialValue by a factor of 1/2*(latticeSize/scale)
+	 * @param initialValue
+	 * @param latticeSize
+	 * @param scale
+	 * @return
+	 */
 	protected int scale(int initialValue, int latticeSize, int scale) {
 		int scalar = (2*initialValue)/(2*(1 + latticeSize/scale));
 		return scalar!=0 ? scalar : 1;

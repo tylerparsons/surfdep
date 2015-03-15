@@ -57,7 +57,7 @@ public class AnalysisControl {
 	/**
 	 * Name of models table.
 	 */
-	private static final String DB_TABLE_AVERAGES = "averages";
+	private static final String DB_TABLE_AVERAGES = "logarithmic_averages";
 	
 	/**
 	 * A set of parameters which identify a unique model.
@@ -212,10 +212,11 @@ public class AnalysisControl {
 
 		analysisFunctions.put("Scaled avg width plot", new AnalysisFunction(
 			AnalysisControl.DEFAULT_INPUT_MSG,
-			new String[] {	// Default params plus z minus H, trial, modelId
+			new String[] {	// Default params plus z, S minus H, trial, modelId
 				"L",
 				"x",
 				"z",
+				"S",
 				"p_diff",
 				"l_0"
 			},
@@ -319,11 +320,18 @@ public class AnalysisControl {
 		// Setup plots
 		visManager.getWidthVsTime().setVisible(true);
 		
+		System.out.println("SELECT DISTINCT L FROM "+DB_TABLE_AVERAGES+" WHERE " + mgi.sqlWhereClause());
+		
 		// Query distinct lengths
 		ResultSet lengths = db.query(
-			"SELECT DISTINCT L FROM averages WHERE " + mgi.sqlWhereClause()
+			"SELECT DISTINCT L FROM "+DB_TABLE_AVERAGES+" WHERE " + mgi.sqlWhereClause()
 		);
 
+		// Query total number of points to plot
+		ResultSet count = db.query(
+			"SELECT count(*) FROM "+DB_TABLE_AVERAGES+" WHERE " + mgi.sqlWhereClause()
+		);
+		
 		// Query all data, ordering by length to ensure all models are plotted
 		ResultSet data = db.query(
 			"SELECT * FROM " + DB_TABLE_AVERAGES +
@@ -333,6 +341,10 @@ public class AnalysisControl {
 		
 		try {
 			
+			// Determine total number of records
+			count.next();
+			int nPoints = count.getInt(1);
+			
 			// Store distinct lengths in ArrayList
 			ArrayList<Integer> lengthList = new ArrayList<Integer>();
 			while (lengths.next()) {
@@ -340,7 +352,7 @@ public class AnalysisControl {
 			}
 			
 			// Delegate plotting to visManager
-			visManager.scaledAvgWidthPlot(lengthList, data, z);
+			visManager.scaledAvgWidthPlot(lengthList, data, nPoints, z);
 
 		} catch (SQLException sqle) {
 			sqle.printStackTrace();
@@ -423,8 +435,7 @@ public class AnalysisControl {
 			" ORDER BY L ASC"
 		);
 		
-		final ArrayList<Point> lnw_avgByL = 
-			new ArrayList<Point>();
+		final ArrayList<Point> lnw_avgByL = new ArrayList<>();
 		
 		try {
 			

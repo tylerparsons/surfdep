@@ -34,9 +34,7 @@ public class DepositionControl extends AbstractSimulation {
 	
 	private DataManager dataManager;
 	private VisualizationManager visManager;
-	
-	// Auto incremented id associated with each model
-	
+
 	// Invoked when analysis of a model is finished.
 	private Runnable analysisCallback = null;
 	
@@ -45,11 +43,10 @@ public class DepositionControl extends AbstractSimulation {
 	private static int remainingTrials;
 	private static int clearMod;
 	private static int plotAllMod;
+	private static double averageFactor;
 	
 	// Driectory in which simulation data is stored
 	private final static String DIR_DATA_ROOT = "data\\";
-
-	public long pointsConsidered = 0;
 	
 /**************************
  * Initialization Methods *
@@ -61,7 +58,7 @@ public class DepositionControl extends AbstractSimulation {
 	public DepositionControl() {
 		
 		//set up visualizations
-		model = new BallisticDiffusionModel();
+		model = instantiateModel();
 		models = new ArrayList<LargeSystemDeposition>();
 		
 		visManager = new VisualizationManager(model.getClass().getName());
@@ -76,7 +73,7 @@ public class DepositionControl extends AbstractSimulation {
 	public void initialize() {
 		
 		//Create a new model for each simulation
-		model = new BallisticDiffusionModel();
+		model = instantiateModel();
 		
 		// Setup plots
 		visManager.initPlots();
@@ -100,10 +97,13 @@ public class DepositionControl extends AbstractSimulation {
 	public void initialize(HashMap<String, Double> params) {
 		
 		//Create a new model for each simulation
-		model = new BallisticDiffusionModel();	
+		model = instantiateModel();
 		
 		// Setup plots
 		visManager.initPlots();
+		
+		// Remove/store control specific parameters
+		Double stepsPerDisplay = params.remove("stepsPerDisplay");
 		
 		//Set Parameters
 		params.put("modelId", (double)modelId++);
@@ -122,9 +122,20 @@ public class DepositionControl extends AbstractSimulation {
 		}
 		
 		// Set steps per display if applicable
-		if(params.get("stepsPerDisplay") != null)
-			setStepsPerDisplay(params.remove("stepsPerDisplay").intValue());
+		if(stepsPerDisplay != null)
+			setStepsPerDisplay(stepsPerDisplay.intValue());
 		
+	}
+	
+	/**
+	 * Checks if averageFactor has been specified,
+	 * passing it as a param if necessary.
+	 */
+	public LargeSystemDeposition instantiateModel() {
+		if (averageFactor != 0)
+			return new BallisticDiffusionModel(averageFactor);
+		else
+			return new BallisticDiffusionModel();
 	}
 	
 	
@@ -173,21 +184,20 @@ public class DepositionControl extends AbstractSimulation {
 		// to prevent overflow of points on the plot
 		// frame
 		long t = model.getTime();
-		if (model.measure(t)) {
-			long mod = visManager.staticPointModulus(model.getHeight());
-			if(pointsConsidered++ % mod == 0
-			|| t < visManager.expectedT_cross(model.getLength())) {
-				// Plot using h_avg time scaling				
-				visManager.logPlotWidth(
-						model.getLength(),
-						Math.log(model.getScaledTime()),
-						Math.log(model.getWidth(model.getScaledTime()))
-				);
-				// Save average width for this model type
-				// for future scaled plots
-				dataManager.updateScaledW_avg(model);
-			}
+		long mod = visManager.dynamicPointModulus(t, model.getLength());
+		if (t % mod == 0) {
+			visManager.logPlotWidth(
+				model.getLength(),
+				Math.log(model.getScaledTime()),
+				Math.log(model.getWidth(model.getScaledTime()))
+			);
 		}
+		
+		// Determine whether or not to take average
+		if (model.takeAverage(t)) {
+			dataManager.updateAverages(model);
+		}
+				
 	}
 	
 	public void stopRunning() {
@@ -395,10 +405,6 @@ public class DepositionControl extends AbstractSimulation {
 	 */
 	public static void main(String[] args) {
 		
-		// Create Simulation
-		final DepositionControl control = new DepositionControl();
-		SimulationControl.createApp(control);
-		
 		// Read parameters
 		String filePath = DIR_DATA_ROOT + "trial_params.txt";
 		Scanner in = null;
@@ -420,8 +426,15 @@ public class DepositionControl extends AbstractSimulation {
 		
 		// Determine number of trials to run
 		remainingTrials = params.remove("numTrials").intValue();
+		// Grab other params
 		clearMod = params.remove("clearMod").intValue();
 		plotAllMod = params.remove("plotAllMod").intValue();
+		if (params.containsKey("averageFactor"))
+			averageFactor = params.remove("averageFactor").doubleValue();
+		
+		// Create Simulation
+		final DepositionControl control = new DepositionControl();
+		SimulationControl.createApp(control);
 		
 		// Run trials recursively
 		control.initialize(params);

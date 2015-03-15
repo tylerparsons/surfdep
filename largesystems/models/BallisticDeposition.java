@@ -15,6 +15,10 @@ public class BallisticDeposition extends LargeSystemDeposition {
 		super();
 	}
 	
+	public BallisticDeposition(double averagefactor) {
+		super(averagefactor);
+	}
+
 	/**
 	 * Selects a column at random and deposits
 	 * an atom there, letting it fall and bond

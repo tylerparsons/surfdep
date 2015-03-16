@@ -8,14 +8,10 @@ import bdm.largesystems.utils.InputDialog;
 import bdm.largesystems.utils.LinearRegression;
 import bdm.largesystems.utils.LinearRegression.Function;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 
 import org.opensourcephysics.controls.AbstractSimulation;
-import org.opensourcephysics.controls.SimulationControl;
 
 /**
  * DepositionControl.java
@@ -39,14 +35,14 @@ public class DepositionControl extends AbstractSimulation {
 	private Runnable analysisCallback = null;
 	
 	// Static trial parameters
-	private static int modelId = 0;
-	private static int remainingTrials;
-	private static int clearMod;
-	private static int plotAllMod;
-	private static double averageFactor;
+	static int modelId = 0;
+	static int remainingTrials;
+	static int clearMod;
+	static int plotAllMod;
+	static double averageFactor;
 	
 	// Driectory in which simulation data is stored
-	private final static String DIR_DATA_ROOT = "data\\";
+	final static String DIR_DATA_ROOT = "data\\";
 	
 /**************************
  * Initialization Methods *
@@ -391,71 +387,5 @@ public class DepositionControl extends AbstractSimulation {
 		}
 		
 	};
-	
-	
-/********
- * Main *
- ********/	
-	
-	/**
-	 * Runs multiple trials. Reads in trial parameters
-	 * from a txt file.
-	 * 
-	 * @param args Not used
-	 */
-	public static void main(String[] args) {
-		
-		// Read parameters
-		String filePath = DIR_DATA_ROOT + "trial_params.txt";
-		Scanner in = null;
-		try {
-			in = new Scanner(new File(filePath));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
-		final HashMap<String, Double> params = new HashMap<String, Double>();
-		
-		while (in.hasNext()) {
-			String line = in.nextLine();
-			System.out.println(line);
-			String[] kvPair = line.split(":\t");
-			params.put(kvPair[0], Double.parseDouble(kvPair[1]));
-		}
-		in.close();
-		
-		// Determine number of trials to run
-		remainingTrials = params.remove("numTrials").intValue();
-		// Grab other params
-		clearMod = params.remove("clearMod").intValue();
-		plotAllMod = params.remove("plotAllMod").intValue();
-		if (params.containsKey("averageFactor"))
-			averageFactor = params.remove("averageFactor").doubleValue();
-		
-		// Create Simulation
-		final DepositionControl control = new DepositionControl();
-		SimulationControl.createApp(control);
-		
-		// Run trials recursively
-		control.initialize(params);
-		control.setAnalysisCallback( () -> {
-			
-			if (--remainingTrials > 0) {
-				
-				if ((modelId+1) % plotAllMod == 0) {
-					control.plotAll();
-				}
-				if ((modelId+1) % clearMod == 0) {
-					control.clearMemory();
-				}
-				
-				control.initialize(params);
-				control.startSimulation();
-			}
-			
-		});
-		control.startSimulation();
-		
-	}
 
 }

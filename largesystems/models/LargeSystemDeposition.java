@@ -8,7 +8,7 @@
  * plementation, visualization and stati-
  * stical analysis.
  */
-package bdm.largesystems.models;
+package surfdep.largesystems.models;
 
 
 import java.awt.Color;

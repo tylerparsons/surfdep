@@ -1,4 +1,4 @@
-package bdm.largesystems.models;
+package surfdep.largesystems.models;
 
 /**
  * BallisticDeposition.java

@@ -1,4 +1,4 @@
-package bdm.largesystems.controllers;
+package surfdep.largesystems.controllers;
 
 import bdm.largesystems.models.BallisticDiffusionModel;
 import bdm.largesystems.models.LargeSystemDeposition;

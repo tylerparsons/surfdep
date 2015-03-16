@@ -22,9 +22,9 @@ import java.util.function.Supplier;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
-import bdm.largesystems.utils.EmbeddedDBArray;
-import bdm.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
-import bdm.largesystems.utils.LinearRegression;
+import surfdep.largesystems.utils.EmbeddedDBArray;
+import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
+import surfdep.largesystems.utils.LinearRegression;
 
 
 public abstract class LargeSystemDeposition implements Drawable {
@@ -162,7 +162,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	/**
 	 * @param params contains updated parameters input by user
 	 * @param N	max size of member
-	 * 			{@link bdm.largesystems.utils.EmbeddedDBArray}.
+	 * 			{@link surfdep.largesystems.utils.EmbeddedDBArray}.
 	 */
 	public void init(HashMap<String, Double> params, int N) {
 		

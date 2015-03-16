@@ -8,11 +8,11 @@ import java.util.LinkedHashMap;
 
 import javax.swing.JOptionPane;
 
-import bdm.largesystems.controllers.VisualizationManager.Point;
-import bdm.largesystems.utils.InputDialog;
-import bdm.largesystems.utils.LinearRegression;
-import bdm.largesystems.utils.ModelGroupIdentifier;
-import bdm.largesystems.utils.MySQLClient;
+import surfdep.largesystems.controllers.VisualizationManager.Point;
+import surfdep.largesystems.utils.InputDialog;
+import surfdep.largesystems.utils.LinearRegression;
+import surfdep.largesystems.utils.ModelGroupIdentifier;
+import surfdep.largesystems.utils.MySQLClient;
 
 /**
  * AnalysisControl.java
@@ -179,7 +179,7 @@ public class AnalysisControl {
 	public AnalysisControl(VisualizationManager vm) {
 		
 		visManager = vm;
-		db = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
+		db = MySQLClient.getSingleton("depositions", "surfdep", "d3po$ition$");
 		
 		initAnalysisFunctions();
 		initControlWindow();
@@ -370,7 +370,7 @@ public class AnalysisControl {
 	 * Queries records identified by mgi, computes the 
 	 * average beta values for each distinct x and passes
 	 * the averages to 
-	 * {@link bdm.largesystems.controllers.VisualizationManager}.
+	 * {@link surfdep.largesystems.controllers.VisualizationManager}.
 	 * 
 	 * @param mgi A {@link ModelGroupIdentifier}
 	 */
@@ -420,7 +420,7 @@ public class AnalysisControl {
 	
 	/**
 	 * Queries L and lnw_avg values for the given
-	 * {@link bdm.largesystems.utils.ModelGroupIdentifier},
+	 * {@link surfdep.largesystems.utils.ModelGroupIdentifier},
 	 * create a linear regression and passes it to
 	 * the member {@link VisualizationManager} along
 	 * with the points for plotting.

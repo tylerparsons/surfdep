@@ -1,17 +1,17 @@
 package surfdep.largesystems.controllers;
 
-import bdm.largesystems.models.BallisticDiffusionModel;
-import bdm.largesystems.models.LargeSystemDeposition;
-import bdm.largesystems.utils.AlertDialog;
-import bdm.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
-import bdm.largesystems.utils.InputDialog;
-import bdm.largesystems.utils.LinearRegression;
-import bdm.largesystems.utils.LinearRegression.Function;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.opensourcephysics.controls.AbstractSimulation;
+
+import surfdep.largesystems.models.BallisticDiffusionModel;
+import surfdep.largesystems.models.LargeSystemDeposition;
+import surfdep.largesystems.utils.AlertDialog;
+import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
+import surfdep.largesystems.utils.InputDialog;
+import surfdep.largesystems.utils.LinearRegression;
+import surfdep.largesystems.utils.LinearRegression.Function;
 
 /**
  * DepositionControl.java

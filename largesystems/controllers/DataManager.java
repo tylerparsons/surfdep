@@ -1,23 +1,20 @@
 package surfdep.largesystems.controllers;
 
+import java.awt.image.BufferedImage;
+import java.awt.Container;
+import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import javax.imageio.ImageIO;
-
-import java.awt.image.BufferedImage;
-import java.awt.Container;
-
-import org.opensourcephysics.display.DrawingFrame;
-
-import bdm.largesystems.models.LargeSystemDeposition;
-import bdm.largesystems.utils.MySQLClient;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Scanner;
+
+import org.opensourcephysics.display.DrawingFrame;
+
+import surfdep.largesystems.models.LargeSystemDeposition;
+import surfdep.largesystems.utils.MySQLClient;
 
 /**
  * DepositionDataManager.java

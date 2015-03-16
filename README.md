@@ -1,5 +1,5 @@
-# BallistcDiffusionModel
-*A software application enabling the simulation and analysis of mathematical and physical models. This version feature the use of the software to simulate atomic surface deposition, but the software may easily be abstracted to run other simulations.*
+# surfdep
+*A Java application enabling the simulation and analysis of atomic surface depositions, or discrete models used to predict the topography of a surface over time as individual particles are deposited. This process has applications in fields such as consumer electronics and additive manufacturing. Though surfdep is meant to simulate surface deposition, many of its components can be used in general scientific computing.*
 
 ----
 ## Simulation of Large Systems

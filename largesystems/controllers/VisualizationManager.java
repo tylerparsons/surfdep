@@ -214,7 +214,7 @@ public class VisualizationManager {
 				if (i++ % mod == 0) {
 				
 					// Grab data points, using h_avg time scaling
-					long t = data.getLong("h_avg");
+					double t = data.getDouble("h_avg");
 					int L = data.getInt("L");
 					double w = data.getDouble("w_avg");
 					

@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 
+import surfdep.largesystems.controllers.DepositionControl;
 import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.VisualizationManager.Point;
 import surfdep.largesystems.utils.InputDialog;
@@ -135,14 +136,14 @@ public class AnalysisControl {
 		
 		analysisFunctions.put("Calculate average", new AnalysisFunction(
 			"Enter valid parameter name ",
-			new String[] {"Parameter name"},
+			new String[] {"Parameter names"},
 			(HashMap<String, String> input) -> {
 				// Run average for the given parameter
-				final String paramName = input.get("Parameter name");
+				final String[] paramNames = input.get("Parameter names").split(",");
 				new AnalysisFunction(new Consumer<HashMap<String, String>>() {
 					@Override
 					public void accept(HashMap<String, String> input) {
-						calcAvg(paramName, new ModelGroupIdentifier(input));
+						calcAvgs(new ModelGroupIdentifier(input), paramNames);
 					}
 				}).analyze();
 			}
@@ -166,16 +167,18 @@ public class AnalysisControl {
 			}	
 		));
 		
-		analysisFunctions.put("beta vs x plot", new AnalysisFunction(
+		analysisFunctions.put("avg t_x values", new AnalysisFunction(
 			(HashMap<String, String> input) -> {
-				betaVsXPlot(new ModelGroupIdentifier(input));
-			}	
+				calcAvgs(new ModelGroupIdentifier(input), DepositionControl.T_X_INPUT_KEYS);
+			}
+		));
+		
+		analysisFunctions.put("beta vs x plot", new AnalysisFunction(
+			(HashMap<String, String> input) -> betaVsXPlot(new ModelGroupIdentifier(input))
 		));
 
 		analysisFunctions.put("alpha plot", new AnalysisFunction(
-			(HashMap<String, String> input) -> {
-				alphaPlot(new ModelGroupIdentifier(input));
-			}	
+			(HashMap<String, String> input) -> alphaPlot(new ModelGroupIdentifier(input))
 		));
 		
 		
@@ -219,29 +222,18 @@ public class AnalysisControl {
  **********************/
 
 	/**
-	 * Initiates an {@link InputDialog} to request
-	 * parameters and then displays the result of
-	 * calculation.
+	 * Calculates and displays a variable number of averages.
 	 */
-	public void calcAvg(String paramName, ModelGroupIdentifier mgi) {
+	public void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
 		
-		double sigma_param = 0;	// Sum over all param values
-		int N = 0;	// Number of samples
+		Average[] avgs = avg(mgi, paramNames);
+		String result = "";
 		
-		ResultSet results = selectWhere(DB_TABLE_MODELS, mgi);
-
-		try {
-			
-			while(results.next()) {
-				sigma_param += results.getDouble(paramName);
-				N++;
-			}
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		for (int i = 0; i < avgs.length; i++)
+			result += "avg " + paramNames[i]
+					+  " = "  + avgs[i].val + "\n";
 		
-		showMessage(paramName + "_avg = " + (sigma_param/N));
+		showMessage(result);
 		initControlWindow();
 		
 	}
@@ -331,10 +323,7 @@ public class AnalysisControl {
 					beta_avg.put(x, avg);
 				}
 				else {
-					Average avg = new Average();
-					avg.val = beta;
-					avg.samples = 1;
-					beta_avg.put(x, avg);
+					beta_avg.put(x, new Average(beta, 1));
 				}
 				
 			}
@@ -447,6 +436,40 @@ public class AnalysisControl {
 	
 	public void showMessage(String message) {
 		JOptionPane.showMessageDialog(null, message);
+	}
+	
+	public Average[] avg(ModelGroupIdentifier mgi, String ... paramNames) {
+		
+		// Query averages for mgi
+		String[] avgKeys = new String[paramNames.length];
+		String columns = "";
+		for (int i = 0; i < avgKeys.length; i++) {
+			avgKeys[i] = "avg(" + paramNames[i] + ")";
+			columns += avgKeys[i] +",";
+		}
+		// Add count function
+		columns += "count(*)";
+		
+		ResultSet results = db.query(
+			"SELECT " + columns + " FROM " + DB_TABLE_MODELS + 
+			" WHERE " + mgi.sqlWhereClause()
+		);
+		
+		// Parse results into Averages
+		Average[] avgs = new Average[paramNames.length];
+		try {
+			
+			results.first();
+			int count = results.getInt("count(*)");
+			for (int i = 0; i < avgs.length; i++)
+					avgs[i] = new Average(results.getDouble(avgKeys[i]), count);
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return avgs;
+		
 	}
 	
 	

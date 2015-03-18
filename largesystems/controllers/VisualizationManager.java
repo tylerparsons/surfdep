@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
 
+import surfdep.largesystems.controllers.analysis.Average;
 import surfdep.largesystems.models.LargeSystemDeposition;
 import surfdep.largesystems.utils.LinearRegression;
 
@@ -315,7 +316,7 @@ public class VisualizationManager {
 	 * Plots average beta values across all x.
 	 * @param beta_avg
 	 */
-	public void plotBetaVsX(HashMap<Double, AnalysisControl.Average> beta_avg) {
+	public void plotBetaVsX(HashMap<Double, Average> beta_avg) {
 		
 		// Create new plot
 		PlotFrame beta_vs_x = new PlotFrame(

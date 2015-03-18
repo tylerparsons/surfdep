@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers;
+package surfdep.largesystems.controllers.analysis;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 
 import javax.swing.JOptionPane;
 
+import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.VisualizationManager.Point;
 import surfdep.largesystems.utils.InputDialog;
 import surfdep.largesystems.utils.LinearRegression;
@@ -38,7 +39,7 @@ public class AnalysisControl {
 	protected VisualizationManager visManager;
 	
 	/**
-	 * An ordered map of analysis function names to Runnables
+	 * An ordered map of analysis function names to AnalysisFunctions
 	 * for executing each function.
 	 */
 	protected LinkedHashMap<String, AnalysisFunction> analysisFunctions;
@@ -90,70 +91,6 @@ public class AnalysisControl {
  ******************/
 	
 	/**
-	 * An interface requiring support for handling
-	 * analysis input parameters.
-	 * 
-	 * @author Tyler
-	 */
-	protected interface Analyzer {
-		
-		public void analyze(HashMap<String, String> input);
-		
-	}
-	
-	/**
-	 * Abstracts functionality for generating InputDialogs
-	 * and running callbacks into a single wrapper class
-	 * for all AnalysisControl functions.
-	 * 
-	 * @author Tyler
-	 */
-	protected static class AnalysisFunction {
-		
-		String inputMessage;
-		String[] inputParams;
-		Analyzer analyzer;
-		
-		public AnalysisFunction(String inputMessage, String[] inputParams, Analyzer analyzer) {
-			this.inputMessage = inputMessage;
-			this.inputParams = inputParams;
-			this.analyzer = analyzer;
-		}
-		
-		public void analyze() {
-			
-			// Create input dialog to enable user
-			// specification of trials over which
-			// to run average
-			
-			new InputDialog(
-				inputMessage,
-				inputParams,
-				(HashMap<String, String> input) -> analyzer.analyze(input)
-			);
-			
-		}
-		
-		public static AnalysisFunction defaultInputAf(Analyzer analyzer) {
-			return new AnalysisFunction(
-					AnalysisControl.DEFAULT_INPUT_MSG,
-					AnalysisControl.COMPLETE_MODEL_PARAMS,
-					analyzer
-			);
-		}
-		
-	}
-	
-	/**
-	 * Used to compute running averages.
-	 * @author Tyler
-	 */
-	public class Average {
-		double val;
-		int samples;
-	}
-	
-	/**
 	 * An Integer object which is mutable
 	 * and thus the value of final objects
 	 * can be changed.
@@ -179,7 +116,7 @@ public class AnalysisControl {
 	public AnalysisControl(VisualizationManager vm) {
 		
 		visManager = vm;
-		db = MySQLClient.getSingleton("depositions", "surfdep", "d3po$ition$");
+		db = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
 		
 		initAnalysisFunctions();
 		initControlWindow();

@@ -5,11 +5,11 @@ import java.util.HashMap;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 
+import surfdep.largesystems.controllers.supplier.AsyncSupplier;
 import surfdep.largesystems.models.BallisticDiffusionModel;
 import surfdep.largesystems.models.LargeSystemDeposition;
 import surfdep.largesystems.utils.AlertDialog;
 import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
-import surfdep.largesystems.utils.InputDialog;
 import surfdep.largesystems.utils.LinearRegression;
 import surfdep.largesystems.utils.LinearRegression.Function;
 
@@ -43,6 +43,19 @@ public class DepositionControl extends AbstractSimulation {
 	
 	// Driectory in which simulation data is stored
 	final static String DIR_DATA_ROOT = "data\\";
+	
+	public final static String[] T_X_INPUT_KEYS = {
+		"t_0", "t_x1", "t_x2"
+	};
+	
+/*******************************
+ * Member Analysis Controllers *
+ *******************************/
+	
+	/**
+	 * Asynchronously obtains input of analysis parameters.
+	 */
+	protected AsyncSupplier<HashMap<String, String>> analysisInputSupplier;
 	
 /**************************
  * Initialization Methods *
@@ -205,10 +218,8 @@ public class DepositionControl extends AbstractSimulation {
 		//Request input of t_cross and implement input callback
 		//to analyze model
 		
-		// Dialog for inputting t_x values
-		new InputDialog(
-			"Input t_x values",
-			new String[] {"t_0", "t_x1", "t_x2"},
+		// Obtain input from member Async Supplier, conduct analysis
+		analysisInputSupplier.get(
 			(HashMap<String, String> input) -> {
 				// Grab parameters from input map, pass to analyzeModel
 				String t_0, t_x1, t_x2;
@@ -238,12 +249,16 @@ public class DepositionControl extends AbstractSimulation {
 		analysisCallback = callback;
 	}
 	
+	public void setAsyncInputSupplier(AsyncSupplier<HashMap<String, String>> supplier) {
+		analysisInputSupplier = supplier;
+	}
+	
 	
 /****************
  * Calculations *
  ****************/	
 	
-	private void analyzeModel(int t_0, int t_x1, int t_x2) {
+	public void analyzeModel(int t_0, int t_x1, int t_x2) {
 		
 		//Run calculations
 		model.calculateBeta(t_0, t_x1);

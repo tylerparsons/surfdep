@@ -1,6 +1,7 @@
 package surfdep.largesystems.controllers.analysis;
 
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 import surfdep.largesystems.utils.InputDialog;
 
@@ -11,16 +12,28 @@ import surfdep.largesystems.utils.InputDialog;
  * 
  * @author Tyler
  */
-class AnalysisFunction {
+public class AnalysisFunction {
 	
-	String inputMessage;
-	String[] inputParams;
-	Analyzer analyzer;
+	protected String inputMessage;
+	protected String[] inputParams;
+	protected Consumer<HashMap<String, String>> analyzer;
 	
-	public AnalysisFunction(String inputMessage, String[] inputParams, Analyzer analyzer) {
+	public AnalysisFunction(
+		String inputMessage,
+		String[] inputParams,
+		Consumer<HashMap<String, String>> analyzer
+	) {
 		this.inputMessage = inputMessage;
 		this.inputParams = inputParams;
 		this.analyzer = analyzer;
+	}
+	
+	public AnalysisFunction(Consumer<HashMap<String, String>> analyzer) {
+		this(
+			AnalysisControl.DEFAULT_INPUT_MSG,
+			AnalysisControl.COMPLETE_MODEL_PARAMS,
+			analyzer
+		);
 	}
 	
 	public void analyze() {
@@ -32,17 +45,9 @@ class AnalysisFunction {
 		new InputDialog(
 			inputMessage,
 			inputParams,
-			(HashMap<String, String> input) -> analyzer.analyze(input)
+			(HashMap<String, String> input) -> analyzer.accept(input)
 		);
 		
-	}
-	
-	public static AnalysisFunction defaultInputAf(Analyzer analyzer) {
-		return new AnalysisFunction(
-				AnalysisControl.DEFAULT_INPUT_MSG,
-				AnalysisControl.COMPLETE_MODEL_PARAMS,
-				analyzer
-		);
 	}
 	
 }

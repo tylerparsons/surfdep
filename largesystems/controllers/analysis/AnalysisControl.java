@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 
@@ -138,9 +139,9 @@ public class AnalysisControl {
 			(HashMap<String, String> input) -> {
 				// Run average for the given parameter
 				final String paramName = input.get("Parameter name");
-				AnalysisFunction.defaultInputAf(new Analyzer() {
+				new AnalysisFunction(new Consumer<HashMap<String, String>>() {
 					@Override
-					public void analyze(HashMap<String, String> input) {
+					public void accept(HashMap<String, String> input) {
 						calcAvg(paramName, new ModelGroupIdentifier(input));
 					}
 				}).analyze();
@@ -164,14 +165,14 @@ public class AnalysisControl {
 				scaledAvgWidthPlot(new ModelGroupIdentifier(input), z);
 			}	
 		));
-
-		analysisFunctions.put("beta vs x plot", AnalysisFunction.defaultInputAf(
+		
+		analysisFunctions.put("beta vs x plot", new AnalysisFunction(
 			(HashMap<String, String> input) -> {
 				betaVsXPlot(new ModelGroupIdentifier(input));
 			}	
 		));
 
-		analysisFunctions.put("alpha plot", AnalysisFunction.defaultInputAf(
+		analysisFunctions.put("alpha plot", new AnalysisFunction(
 			(HashMap<String, String> input) -> {
 				alphaPlot(new ModelGroupIdentifier(input));
 			}	
@@ -256,8 +257,6 @@ public class AnalysisControl {
 		
 		// Setup plots
 		visManager.getWidthVsTime().setVisible(true);
-		
-		System.out.println("SELECT DISTINCT L FROM "+DB_TABLE_AVERAGES+" WHERE " + mgi.sqlWhereClause());
 		
 		// Query distinct lengths
 		ResultSet lengths = db.query(
@@ -434,10 +433,6 @@ public class AnalysisControl {
 	
 	public ResultSet selectWhere(String table, ModelGroupIdentifier mgi) {
 
-//		System.out.println(
-//			"SELECT * FROM " + table +
-//			" WHERE " + mgi.sqlWhereClause()
-//		);
 		return db.query(
 			"SELECT * FROM " + table +
 			" WHERE " + mgi.sqlWhereClause()

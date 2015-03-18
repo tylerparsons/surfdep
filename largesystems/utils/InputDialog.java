@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -28,24 +29,17 @@ public class InputDialog extends JFrame {
 	private JButton enter;
 	private JTextField[] inputs;
 	private String[] keys;
-	private InputHandler mHandler;
-	
-/******************
- * Nested Classes *
- ******************/
-	
-	public interface InputHandler {
-		
-		public void handleInput(HashMap<String, String> input);
-		
-	}
+	private Consumer<HashMap<String, String>> inputHandler;
 	
 /******************
  * Initialization *
  ******************/
 
-	public InputDialog(String title, String[] fieldKeys, InputHandler handler) {
-		mHandler = handler;
+	public InputDialog(
+		String title, String[] fieldKeys,
+		Consumer<HashMap<String, String>> handler
+	) {
+		inputHandler = handler;
 		keys = fieldKeys;
 		inputs = new JTextField[keys.length];
 		init(title);
@@ -129,7 +123,7 @@ public class InputDialog extends JFrame {
 		dispose();
 		
 		// Invoke InputHandler callback
-		mHandler.handleInput(input);
+		inputHandler.accept(input);
 		
 	}
 	

@@ -7,6 +7,10 @@ import java.util.Scanner;
 
 import org.opensourcephysics.controls.SimulationControl;
 
+import surfdep.largesystems.controllers.supplier.AsyncSupplier;
+import surfdep.largesystems.controllers.supplier.CachedInputSupplier;
+import surfdep.largesystems.controllers.supplier.InputDialogSupplier;
+
 /**
  * TrialRunner.java
  * Created: 15 March 2015
@@ -42,6 +46,9 @@ public class TrialRunner {
 		}
 		in.close();
 		
+		// Create control
+		final DepositionControl control = new DepositionControl();
+		
 		// Determine number of trials to run
 		DepositionControl.remainingTrials = params.remove("numTrials").intValue();
 		// Grab other params
@@ -50,8 +57,17 @@ public class TrialRunner {
 		if (params.containsKey("averageFactor"))
 			DepositionControl.averageFactor = params.remove("averageFactor").doubleValue();
 		
+		// Instantiate AsyncSupplier to provide input for model analysis
+		AsyncSupplier<HashMap<String, String>> supplier;
+		try {
+			// Use explicity defined input parameters if possible
+			supplier = new CachedInputSupplier(control, params);
+		} catch (IllegalArgumentException e) {
+			supplier = new InputDialogSupplier();
+		}
+		control.setAsyncInputSupplier(supplier);
+		
 		// Create Simulation
-		final DepositionControl control = new DepositionControl();
 		SimulationControl.createApp(control);
 		
 		// Run trials recursively

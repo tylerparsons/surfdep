@@ -41,7 +41,7 @@ public class TrialRunner {
 		while (in.hasNext()) {
 			String line = in.nextLine();
 			System.out.println(line);
-			String[] kvPair = line.split(":\t");
+			String[] kvPair = line.split("\t");
 			params.put(kvPair[0], Double.parseDouble(kvPair[1]));
 		}
 		in.close();

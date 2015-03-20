@@ -282,6 +282,11 @@ public class DataManager {
 		}
 	}
 	
+	public void printToCSV(String csvPath, String output) {
+		csv = new File(csvPath);
+		printToCSV(output);
+	}
+	
 	public void printToTxt(String output) {
 		try {
 			out = new FileWriter(txt, true);

@@ -71,7 +71,12 @@ public class AnalysisControl {
 	/**
 	 * Path to data txt file.
 	 */
-	private static final String TXT_FILE_PATH = "data\\analysis_data.txt";
+	private static final String TXT_FILE_PATH = "data\\analysis\\analysis_data.txt";
+	
+	/**
+	 * Path to data txt file.
+	 */
+	private static final String CSV_FILE_DIR = "data\\analysis\\";;
 	
 	/**
 	 * A set of parameters which identify a unique model.
@@ -198,7 +203,7 @@ public class AnalysisControl {
 		
 		analysisFunctions.put("avg t_x values", new AnalysisFunction(
 			createSavingAnalyzer("avg t_x values", (ModelGroupIdentifier mgi) -> {
-				calcAvgs(mgi, DepositionControl.T_X_INPUT_KEYS);
+				calcAvgs("avg t_x values", mgi, DepositionControl.T_X_INPUT_KEYS);
 			}
 		)));
 		
@@ -229,7 +234,10 @@ public class AnalysisControl {
 	protected void storeFilenames(String[] titles) {
 		if (filenames == null) filenames = new HashMap<>();
 		for (String title: titles) {
-			filenames.put(title, title.replaceAll("\\s", "_").toLowerCase()+".csv");
+			filenames.put(
+				title, 
+				CSV_FILE_DIR+title.replaceAll("\\s", "_").toLowerCase()+".csv"
+			);
 		}
 	}
 	
@@ -265,7 +273,7 @@ public class AnalysisControl {
 	/**
 	 * Calculates and displays a variable number of averages.
 	 */
-	public void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
+	public void calcAvgs(String title, ModelGroupIdentifier mgi, String ... paramNames) {
 		
 		HashMap<String, Double> data = new HashMap<>();
 		Average[] avgs = avg(mgi, paramNames);
@@ -277,10 +285,17 @@ public class AnalysisControl {
 			data.put(paramNames[i], avgs[i].val);
 		}
 		
-		saveData("Calculate averages", data);
+		saveData(title, data);
 		showMessage(result);
 		initControlWindow();
 		
+	}
+	
+	/**
+	 * Calculates and displays a variable number of averages.
+	 */
+	public void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
+		calcAvgs("Calculate avgs", mgi, paramNames);
 	}
 	
 	/**
@@ -520,7 +535,10 @@ public class AnalysisControl {
 	public void saveData(String title, ModelGroupIdentifier mgi) {
 		HashMap<String, String> params = mgi.getInputParams();
 		// csv
-		// TODO implement
+		dataManager.printToCSV(
+			filenames.get(title),
+			dataManager.getCSVOutput(params)
+		);
 		// txt
 		params.put("sqlWhereClause", mgi.sqlWhereClause());
 		dataManager.saveToTxt(params);
@@ -528,7 +546,10 @@ public class AnalysisControl {
 	
 	public void saveData(String title, HashMap<String, Double> params) {
 		// csv
-		// TODO implement
+		dataManager.printToCSV(
+			filenames.get(title),
+			dataManager.getCSVOutput(params)
+		);
 		// txt
 		dataManager.saveToTxt(params);
 	}

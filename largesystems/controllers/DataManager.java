@@ -2,7 +2,9 @@ package surfdep.largesystems.controllers;
 
 import java.awt.image.BufferedImage;
 import java.awt.Container;
+
 import javax.imageio.ImageIO;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,12 +49,24 @@ public class DataManager {
 	private final static String DB_TABLE_SCALED_AVERAGES = "scaled_averages";
 	private final static String DB_TABLE_LOG_AVERAGES = "logarithmic_averages";
 	
-	public DataManager (String idLogPath, String txtPath, String csvPath) {
-		idLog = new File(idLogPath);
+	public DataManager(String txtPath) {
 		txt = new File(txtPath);
+	}
+	
+	public DataManager(String txtPath, String csvPath) {
+		this(txtPath);
 		csv = new File(csvPath);
+	}
+	
+	public DataManager(String txtPath, String csvPath, MySQLClient db) {
+		this(txtPath, csvPath);
+		this.db = db;
+	}
+	
+	public DataManager(String idLogPath, String txtPath, String csvPath) {
+		this(txtPath, csvPath, MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$"));
+		idLog = new File(idLogPath);
 		outputId = readOutputID();
-		db = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
 	}
 	
 /*****************
@@ -107,49 +121,127 @@ public class DataManager {
 	}
 	
 	
+/******************
+ * Nested Classes *
+ ******************/
+	
+	protected interface Printer {
+		
+		public void print() throws IOException;
+		
+	}
+
+	protected interface Stringifier {
+		
+		public <T> String paramToString(String key, T value);
+		
+	}
+	
+	
 /****************
  * Data Writing *
  ****************/
 	
-	public void saveToTxt(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+	protected void printSafely(File f, Printer p) {
 		try {
-			out = new FileWriter(txt, true);
-			String[] packages = model.getClass().getName().split("\\.");
-			out.append("\n***************************");
-			out.append("\n"+packages[packages.length-1]);
-			out.append("\n***************************");
-			out.append("\nTrial\t" + outputId);
-			
-			//Output given Parameters
-			HashMap<String, Double> params = model.parameters();
-			for (String name: params.keySet())
-				out.append("\n" + name + "\t" + model.getParameter(name));
-			for (String name: addlParams.keySet())
-				out.append("\n" + name + "\t" + addlParams.get(name).doubleValue());
-			
-			out.append('\n');
+			out = new FileWriter(f, true);
+			p.print();
 			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
+	public <T> String txtParamToString(String key, T value) {
+		return "\n" + key + "\t" + value;
+	}
+	
+	public <T> String csvParamToString(String key, T value) {
+		return value + "\t";
+	}
+
+	@SafeVarargs
+	public final <T> String getOutput(Stringifier s, HashMap<String, T> ... paramMaps) {
+		StringBuilder builder = new StringBuilder();
+		for(HashMap<String, T> params: paramMaps)
+			for (String key: params.keySet())
+				builder.append(s.paramToString(key, params.get(key)));
+		return builder.toString();
+	}
+	
+	@SafeVarargs
+	public final <T> String getTxtOutput(HashMap<String, T> ... paramMaps) {
+		return getOutput(new Stringifier() {
+			@Override
+			@SuppressWarnings("hiding")
+			public <T> String paramToString(String key, T value) {
+				return txtParamToString(key, value);
+			}
+		}, paramMaps);
+	}
+	
+	@SafeVarargs
+	public final <T> String getCSVOutput(HashMap<String, T> ... paramMaps) {
+		return getOutput(new Stringifier() {
+			@Override
+			@SuppressWarnings("hiding")
+			public <T> String paramToString(String key, T value) {
+				return csvParamToString(key, value);
+			}
+		}, paramMaps);
+	}
+	
+	public void saveToTxt(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+		printSafely(txt, new Printer() {
+			@Override
+			public void print() throws IOException {
+				out = new FileWriter(txt, true);
+				String[] packages = model.getClass().getName().split("\\.");
+				out.append("\n***************************");
+				out.append("\n"+packages[packages.length-1]);
+				out.append("\n***************************");
+				out.append("\nTrial\t" + outputId);
+				
+				// Print parameters
+				out.append(getTxtOutput(model.parameters(), addlParams));
+				
+				out.append('\n');
+				out.close();
+			}
+		});
+	}
+	
+	@SafeVarargs
+	public final <T> void saveToTxt(HashMap<String, T> ... paramMaps) {
+		printSafely(txt, new Printer() {
+			@Override
+			public void print() throws IOException {
+				// Print parameters
+				out.append(getTxtOutput(paramMaps)+"\n");
+			}
+		});
+	}
+	
 	public void saveToCSV(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
-		try {
-			out = new FileWriter(csv, true);
-			out.append(outputId + "\t");
-			
-			//Output given Parameters
-			for (Double d: model.parameters().values())
-				out.append(d.doubleValue() + "\t");
-			for (Double d: addlParams.values())
-				out.append(d.doubleValue() + "\t");
-			out.append('\n');
-			
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		printSafely(csv, new Printer() {
+			@Override
+			public void print() throws IOException {
+				// Output given Parameters
+				out.append(getCSVOutput(model.parameters(), addlParams));
+				out.append('\n');
+			}
+		});
+	}
+	
+	public void saveToCSV(String csvPath, HashMap<String, Double> params) {
+		printSafely(new File("csvPath"), new Printer() {
+			@Override
+			public void print() throws IOException {
+				// Output given Parameters
+				out.append(getCSVOutput(params));
+				out.append('\n');
+			}
+		});
 	}
 	
 	public void saveImage(DrawingFrame frame, String directory, String name) {

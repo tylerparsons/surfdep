@@ -16,6 +16,7 @@ import java.util.HashMap;
 public class ModelGroupIdentifier {
 
 	protected String sqlWhereClause;
+	protected HashMap<String, String> inputParams;
 	
 	/**
 	 * Creates a ModelGroupIdentifier from the given constraints.
@@ -23,7 +24,8 @@ public class ModelGroupIdentifier {
 	 * 						comma delimited lists of dashed
 	 * 						ranges for each parameter.
 	 */
-	public ModelGroupIdentifier(HashMap<String, String> inputParams) throws IllegalArgumentException {
+	public ModelGroupIdentifier(HashMap<String, String> params) throws IllegalArgumentException {
+		inputParams = params;
 		sqlWhereClause = genSqlWhereClause(inputParams);
 	}
 	
@@ -93,6 +95,10 @@ public class ModelGroupIdentifier {
 	
 	public String sqlWhereClause() {
 		return sqlWhereClause;
+	}
+	
+	public HashMap<String, String> getInputParams() {
+		return inputParams;
 	}
 	
 }

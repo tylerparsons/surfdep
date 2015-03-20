@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 
+import surfdep.largesystems.controllers.DataManager;
 import surfdep.largesystems.controllers.DepositionControl;
 import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.VisualizationManager.Point;
@@ -34,6 +35,11 @@ public class AnalysisControl {
 	 * containing past model data.
 	 */
 	protected MySQLClient db;
+	
+	/**
+	 * Used for saving data to txt file.
+	 */
+	protected DataManager dataManager;
 	
 	/**
 	 * Object for handling plots and visualizations.
@@ -63,6 +69,11 @@ public class AnalysisControl {
 	private static final String DB_TABLE_AVERAGES = "logarithmic_averages";
 	
 	/**
+	 * Path to data txt file.
+	 */
+	private static final String TXT_FILE_PATH = "data\\analysis_data.txt";
+	
+	/**
 	 * A set of parameters which identify a unique model.
 	 */
 	protected final static String[] COMPLETE_MODEL_PARAMS = {
@@ -74,6 +85,11 @@ public class AnalysisControl {
 			"p_diff",
 			"l_0"
 	};
+	
+	/**
+	 * Map of function titles to associated data file names.
+	 */
+	protected HashMap<String, String> filenames;
 
 
 /*************
@@ -110,19 +126,30 @@ public class AnalysisControl {
  ******************/
 	
 	public AnalysisControl() {
-		
 		this(new VisualizationManager("BallisticDiffusionModel"));
-		
 	}
 	
 	public AnalysisControl(VisualizationManager vm) {
 		
 		visManager = vm;
 		db = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
+		dataManager = new DataManager(TXT_FILE_PATH);
 		
 		initAnalysisFunctions();
 		initControlWindow();
 		
+	}
+	
+	public Consumer<HashMap<String, String>> createSavingAnalyzer(
+		String title,
+		Consumer<ModelGroupIdentifier> analyzer
+	) {
+		return (HashMap<String, String> input) -> {
+			ModelGroupIdentifier mgi = new ModelGroupIdentifier(input);
+			dataManager.printToTxt("\n"+title);
+			saveData(title, mgi);
+			analyzer.accept(mgi);
+		};
 	}
 	
 	/**
@@ -134,18 +161,20 @@ public class AnalysisControl {
 		// Function map
 		analysisFunctions = new LinkedHashMap<String, AnalysisFunction>();
 		
-		analysisFunctions.put("Calculate average", new AnalysisFunction(
+		analysisFunctions.put("Calculate averages", new AnalysisFunction(
 			"Enter valid parameter name ",
 			new String[] {"Parameter names"},
 			(HashMap<String, String> input) -> {
 				// Run average for the given parameter
 				final String[] paramNames = input.get("Parameter names").split(",");
-				new AnalysisFunction(new Consumer<HashMap<String, String>>() {
-					@Override
-					public void accept(HashMap<String, String> input) {
-						calcAvgs(new ModelGroupIdentifier(input), paramNames);
+				new AnalysisFunction(createSavingAnalyzer("Calculate averages",
+					new Consumer<ModelGroupIdentifier>() {
+						@Override
+						public void accept(ModelGroupIdentifier mgi) {
+							calcAvgs(mgi, paramNames);
+						}
 					}
-				}).analyze();
+				)).analyze();
 			}
 		));
 
@@ -168,19 +197,22 @@ public class AnalysisControl {
 		));
 		
 		analysisFunctions.put("avg t_x values", new AnalysisFunction(
-			(HashMap<String, String> input) -> {
-				calcAvgs(new ModelGroupIdentifier(input), DepositionControl.T_X_INPUT_KEYS);
+			createSavingAnalyzer("avg t_x values", (ModelGroupIdentifier mgi) -> {
+				calcAvgs(mgi, DepositionControl.T_X_INPUT_KEYS);
 			}
-		));
+		)));
 		
 		analysisFunctions.put("beta vs x plot", new AnalysisFunction(
-			(HashMap<String, String> input) -> betaVsXPlot(new ModelGroupIdentifier(input))
-		));
+			createSavingAnalyzer("beta vs x plot", (ModelGroupIdentifier mgi) -> {
+				betaVsXPlot(mgi);
+			}
+		)));
 
 		analysisFunctions.put("alpha plot", new AnalysisFunction(
-			(HashMap<String, String> input) -> alphaPlot(new ModelGroupIdentifier(input))
-		));
-		
+			createSavingAnalyzer("alpha plot", (ModelGroupIdentifier mgi) -> {
+				alphaPlot(mgi);
+			}
+		)));
 		
 		// String[] containing function names
 		functionNames = new String[analysisFunctions.size()];
@@ -190,6 +222,15 @@ public class AnalysisControl {
 			functionNames[i++] = name;
 		}
 		
+		storeFilenames(functionNames);
+		
+	}
+	
+	protected void storeFilenames(String[] titles) {
+		if (filenames == null) filenames = new HashMap<>();
+		for (String title: titles) {
+			filenames.put(title, title.replaceAll("\\s", "_").toLowerCase()+".csv");
+		}
 	}
 	
 	/**
@@ -204,7 +245,7 @@ public class AnalysisControl {
 			String functionName = (String)JOptionPane.showInputDialog(
 					null, "Select an analysis function",
 					"Analysis Control",JOptionPane.QUESTION_MESSAGE,
-					null,functionNames,"Add a new friend"
+					null,functionNames,"Calculate averages"
 			);
 			
 			// Invoke callback
@@ -226,13 +267,17 @@ public class AnalysisControl {
 	 */
 	public void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
 		
+		HashMap<String, Double> data = new HashMap<>();
 		Average[] avgs = avg(mgi, paramNames);
 		String result = "";
 		
-		for (int i = 0; i < avgs.length; i++)
+		for (int i = 0; i < avgs.length; i++) {
 			result += "avg " + paramNames[i]
 					+  " = "  + avgs[i].val + "\n";
+			data.put(paramNames[i], avgs[i].val);
+		}
 		
+		saveData("Calculate averages", data);
 		showMessage(result);
 		initControlWindow();
 		
@@ -471,7 +516,22 @@ public class AnalysisControl {
 		return avgs;
 		
 	}
+
+	public void saveData(String title, ModelGroupIdentifier mgi) {
+		HashMap<String, String> params = mgi.getInputParams();
+		// csv
+		// TODO implement
+		// txt
+		params.put("sqlWhereClause", mgi.sqlWhereClause());
+		dataManager.saveToTxt(params);
+	}
 	
+	public void saveData(String title, HashMap<String, Double> params) {
+		// csv
+		// TODO implement
+		// txt
+		dataManager.saveToTxt(params);
+	}
 	
 /********
  * Main *

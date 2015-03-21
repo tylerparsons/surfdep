@@ -1,9 +1,9 @@
-package surfdep.largesystems.controllers.analysis;
+package surfdep.controllers.analysis;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-import surfdep.largesystems.utils.InputDialog;
+import surfdep.utils.InputDialog;
 
 /**
  * Abstracts functionality for generating InputDialogs

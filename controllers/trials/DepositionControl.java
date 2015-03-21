@@ -1,19 +1,19 @@
-package surfdep.largesystems.controllers.trials;
+package surfdep.controllers.trials;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 
-import surfdep.largesystems.controllers.DataManager;
-import surfdep.largesystems.controllers.VisualizationManager;
-import surfdep.largesystems.controllers.supplier.AsyncSupplier;
-import surfdep.largesystems.models.Deposition;
-import surfdep.largesystems.models.DepositionFactory;
-import surfdep.largesystems.utils.AlertDialog;
-import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
-import surfdep.largesystems.utils.LinearRegression;
-import surfdep.largesystems.utils.LinearRegression.Function;
+import surfdep.controllers.DataManager;
+import surfdep.controllers.VisualizationManager;
+import surfdep.controllers.supplier.AsyncSupplier;
+import surfdep.models.Deposition;
+import surfdep.models.DepositionFactory;
+import surfdep.utils.AlertDialog;
+import surfdep.utils.EmbeddedDBArray.DBOperationCallback;
+import surfdep.utils.LinearRegression;
+import surfdep.utils.LinearRegression.Function;
 
 /**
  * DepositionControl.java

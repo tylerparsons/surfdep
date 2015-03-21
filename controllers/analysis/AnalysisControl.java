@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers.analysis;
+package surfdep.controllers.analysis;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -9,14 +9,14 @@ import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 
-import surfdep.largesystems.controllers.DataManager;
-import surfdep.largesystems.controllers.trials.DepositionControl;
-import surfdep.largesystems.controllers.VisualizationManager;
-import surfdep.largesystems.controllers.VisualizationManager.Point;
-import surfdep.largesystems.utils.InputDialog;
-import surfdep.largesystems.utils.LinearRegression;
-import surfdep.largesystems.utils.ModelGroupIdentifier;
-import surfdep.largesystems.utils.MySQLClient;
+import surfdep.controllers.DataManager;
+import surfdep.controllers.trials.DepositionControl;
+import surfdep.controllers.VisualizationManager;
+import surfdep.controllers.VisualizationManager.Point;
+import surfdep.utils.InputDialog;
+import surfdep.utils.LinearRegression;
+import surfdep.utils.ModelGroupIdentifier;
+import surfdep.utils.MySQLClient;
 
 /**
  * AnalysisControl.java

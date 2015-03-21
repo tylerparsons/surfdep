@@ -1,9 +1,9 @@
-package surfdep.largesystems.controllers.supplier;
+package surfdep.controllers.supplier;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-import surfdep.largesystems.controllers.trials.DepositionControl;
+import surfdep.controllers.trials.DepositionControl;
 
 /**
  * AnalysisCallback.java

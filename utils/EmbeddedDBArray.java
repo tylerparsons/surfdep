@@ -1,4 +1,4 @@
-package surfdep.largesystems.utils;
+package surfdep.utils;
 	
 import java.sql.ResultSet;
 import java.sql.SQLException;

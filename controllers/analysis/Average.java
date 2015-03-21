@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers.analysis;
+package surfdep.controllers.analysis;
 
 /**
  * Used to compute running averages.

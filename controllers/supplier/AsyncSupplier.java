@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers.supplier;
+package surfdep.controllers.supplier;
 
 import java.util.function.Consumer;
 

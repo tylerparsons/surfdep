@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers;
+package surfdep.controllers;
 
 import java.awt.image.BufferedImage;
 import java.awt.Container;
@@ -15,8 +15,8 @@ import java.util.Scanner;
 
 import org.opensourcephysics.display.DrawingFrame;
 
-import surfdep.largesystems.models.Deposition;
-import surfdep.largesystems.utils.MySQLClient;
+import surfdep.models.Deposition;
+import surfdep.utils.MySQLClient;
 
 /**
  * DepositionDataManager.java

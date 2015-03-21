@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers.trials;
+package surfdep.controllers.trials;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 import org.opensourcephysics.controls.SimulationControl;
 
-import surfdep.largesystems.controllers.supplier.AsyncSupplier;
-import surfdep.largesystems.controllers.supplier.CachedInputSupplier;
-import surfdep.largesystems.controllers.supplier.InputDialogSupplier;
+import surfdep.controllers.supplier.AsyncSupplier;
+import surfdep.controllers.supplier.CachedInputSupplier;
+import surfdep.controllers.supplier.InputDialogSupplier;
 
 /**
  * TrialRunner.java

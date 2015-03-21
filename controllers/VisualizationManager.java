@@ -1,4 +1,4 @@
-package surfdep.largesystems.controllers;
+package surfdep.controllers;
 
 import java.awt.Color;
 import java.sql.ResultSet;
@@ -9,9 +9,9 @@ import java.util.HashMap;
 import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
 
-import surfdep.largesystems.controllers.analysis.Average;
-import surfdep.largesystems.models.Deposition;
-import surfdep.largesystems.utils.LinearRegression;
+import surfdep.controllers.analysis.Average;
+import surfdep.models.Deposition;
+import surfdep.utils.LinearRegression;
 
 public class VisualizationManager {
 

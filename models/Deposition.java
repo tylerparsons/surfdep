@@ -8,7 +8,7 @@
  * plementation, visualization and stati-
  * stical analysis.
  */
-package surfdep.largesystems.models;
+package surfdep.models;
 
 
 import java.awt.Color;
@@ -22,9 +22,9 @@ import java.util.function.Supplier;
 import org.opensourcephysics.display.Drawable;
 import org.opensourcephysics.display.DrawingPanel;
 
-import surfdep.largesystems.utils.EmbeddedDBArray;
-import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
-import surfdep.largesystems.utils.LinearRegression;
+import surfdep.utils.EmbeddedDBArray;
+import surfdep.utils.EmbeddedDBArray.DBOperationCallback;
+import surfdep.utils.LinearRegression;
 
 
 public abstract class Deposition implements Drawable {
@@ -162,7 +162,7 @@ public abstract class Deposition implements Drawable {
 	/**
 	 * @param params contains updated parameters input by user
 	 * @param N	max size of member
-	 * 			{@link surfdep.largesystems.utils.EmbeddedDBArray}.
+	 * 			{@link surfdep.utils.EmbeddedDBArray}.
 	 */
 	public void init(HashMap<String, Double> params, int N) {
 		

@@ -1,10 +1,10 @@
-package surfdep.largesystems.controllers.supplier;
+package surfdep.controllers.supplier;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
 
-import surfdep.largesystems.controllers.trials.DepositionControl;
-import surfdep.largesystems.utils.InputDialog;
+import surfdep.controllers.trials.DepositionControl;
+import surfdep.utils.InputDialog;
 
 public class InputDialogSupplier implements AsyncSupplier<HashMap<String, String>> {
 

@@ -1,4 +1,4 @@
-package surfdep.largesystems.utils;
+package surfdep.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

@@ -40,11 +40,11 @@ public class CachedInputSupplier implements AsyncSupplier<HashMap<String, String
 		
 		cachedInput = new HashMap<>();
 		for (String key: DepositionControl.T_X_INPUT_KEYS) {
-			String value;
-			if ((value = params.remove(key).toString()) == null) {
+			Double value;
+			if ((value = params.remove(key)) == null) {
 				throw new IllegalArgumentException("Missing t_x input parameter \""+key+"\"");
 			}
-			cachedInput.put(key, value);
+			cachedInput.put(key, "" + Math.log(value.doubleValue()));
 		}
 			
 	}

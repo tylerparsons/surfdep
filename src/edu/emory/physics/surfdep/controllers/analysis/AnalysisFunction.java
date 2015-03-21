@@ -1,9 +1,9 @@
-package surfdep.controllers.analysis;
+package edu.emory.physics.surfdep.controllers.analysis;
+
+import edu.emory.physics.surfdep.utils.InputDialog;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
-
-import surfdep.utils.InputDialog;
 
 /**
  * Abstracts functionality for generating InputDialogs

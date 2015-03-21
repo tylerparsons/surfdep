@@ -1,4 +1,7 @@
-package surfdep.controllers;
+package edu.emory.physics.surfdep.controllers;
+
+import edu.emory.physics.surfdep.models.Deposition;
+import edu.emory.physics.surfdep.utils.MySQLClient;
 
 import java.awt.image.BufferedImage;
 import java.awt.Container;
@@ -14,9 +17,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import org.opensourcephysics.display.DrawingFrame;
-
-import surfdep.models.Deposition;
-import surfdep.utils.MySQLClient;
 
 /**
  * DepositionDataManager.java

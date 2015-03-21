@@ -1,4 +1,8 @@
-package surfdep.controllers.trials;
+package edu.emory.physics.surfdep.controllers.trials;
+
+import edu.emory.physics.surfdep.controllers.supplier.AsyncSupplier;
+import edu.emory.physics.surfdep.controllers.supplier.CachedInputSupplier;
+import edu.emory.physics.surfdep.controllers.supplier.InputDialogSupplier;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -6,10 +10,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import org.opensourcephysics.controls.SimulationControl;
-
-import surfdep.controllers.supplier.AsyncSupplier;
-import surfdep.controllers.supplier.CachedInputSupplier;
-import surfdep.controllers.supplier.InputDialogSupplier;
 
 /**
  * TrialRunner.java

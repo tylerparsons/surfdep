@@ -1,4 +1,13 @@
-package surfdep.controllers.analysis;
+package edu.emory.physics.surfdep.controllers.analysis;
+
+import edu.emory.physics.surfdep.controllers.DataManager;
+import edu.emory.physics.surfdep.controllers.trials.DepositionControl;
+import edu.emory.physics.surfdep.controllers.VisualizationManager;
+import edu.emory.physics.surfdep.controllers.VisualizationManager.Point;
+import edu.emory.physics.surfdep.utils.InputDialog;
+import edu.emory.physics.surfdep.utils.LinearRegression;
+import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
+import edu.emory.physics.surfdep.utils.MySQLClient;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -8,15 +17,6 @@ import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
-
-import surfdep.controllers.DataManager;
-import surfdep.controllers.trials.DepositionControl;
-import surfdep.controllers.VisualizationManager;
-import surfdep.controllers.VisualizationManager.Point;
-import surfdep.utils.InputDialog;
-import surfdep.utils.LinearRegression;
-import surfdep.utils.ModelGroupIdentifier;
-import surfdep.utils.MySQLClient;
 
 /**
  * AnalysisControl.java
@@ -358,7 +358,7 @@ public class AnalysisControl {
 	 * Queries records identified by mgi, computes the 
 	 * average beta values for each distinct x and passes
 	 * the averages to 
-	 * {@link surfdep.largesystems.controllers.VisualizationManager}.
+	 * {@link edu.emory.physics.surfdep.largesystems.controllers.VisualizationManager}.
 	 * 
 	 * @param mgi A {@link ModelGroupIdentifier}
 	 */
@@ -405,7 +405,7 @@ public class AnalysisControl {
 	
 	/**
 	 * Queries L and lnw_avg values for the given
-	 * {@link surfdep.largesystems.utils.ModelGroupIdentifier},
+	 * {@link edu.emory.physics.surfdep.largesystems.utils.ModelGroupIdentifier},
 	 * create a linear regression and passes it to
 	 * the member {@link VisualizationManager} along
 	 * with the points for plotting.

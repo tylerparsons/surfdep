@@ -1,19 +1,19 @@
-package surfdep.controllers.trials;
+package edu.emory.physics.surfdep.controllers.trials;
+
+import edu.emory.physics.surfdep.controllers.DataManager;
+import edu.emory.physics.surfdep.controllers.VisualizationManager;
+import edu.emory.physics.surfdep.controllers.supplier.AsyncSupplier;
+import edu.emory.physics.surfdep.models.Deposition;
+import edu.emory.physics.surfdep.models.DepositionFactory;
+import edu.emory.physics.surfdep.utils.AlertDialog;
+import edu.emory.physics.surfdep.utils.EmbeddedDBArray.DBOperationCallback;
+import edu.emory.physics.surfdep.utils.LinearRegression;
+import edu.emory.physics.surfdep.utils.LinearRegression.Function;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.opensourcephysics.controls.AbstractSimulation;
-
-import surfdep.controllers.DataManager;
-import surfdep.controllers.VisualizationManager;
-import surfdep.controllers.supplier.AsyncSupplier;
-import surfdep.models.Deposition;
-import surfdep.models.DepositionFactory;
-import surfdep.utils.AlertDialog;
-import surfdep.utils.EmbeddedDBArray.DBOperationCallback;
-import surfdep.utils.LinearRegression;
-import surfdep.utils.LinearRegression.Function;
 
 /**
  * DepositionControl.java

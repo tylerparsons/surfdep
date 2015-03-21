@@ -1,4 +1,4 @@
-package surfdep.utils;
+package edu.emory.physics.surfdep.utils;
 
 import java.io.File;
 import java.lang.Throwable;

@@ -1,4 +1,4 @@
-package surfdep.controllers.supplier;
+package edu.emory.physics.surfdep.controllers.supplier;
 
 import java.util.function.Consumer;
 

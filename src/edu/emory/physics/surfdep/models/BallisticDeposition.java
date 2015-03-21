@@ -1,4 +1,4 @@
-package surfdep.models;
+package edu.emory.physics.surfdep.models;
 
 /**
  * BallisticDeposition.java

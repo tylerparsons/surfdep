@@ -1,9 +1,9 @@
-package surfdep.controllers.supplier;
+package edu.emory.physics.surfdep.controllers.supplier;
+
+import edu.emory.physics.surfdep.controllers.trials.DepositionControl;
 
 import java.util.HashMap;
 import java.util.function.Consumer;
-
-import surfdep.controllers.trials.DepositionControl;
 
 /**
  * AnalysisCallback.java

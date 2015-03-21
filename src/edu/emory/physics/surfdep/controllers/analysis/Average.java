@@ -1,4 +1,4 @@
-package surfdep.controllers.analysis;
+package edu.emory.physics.surfdep.controllers.analysis;
 
 /**
  * Used to compute running averages.

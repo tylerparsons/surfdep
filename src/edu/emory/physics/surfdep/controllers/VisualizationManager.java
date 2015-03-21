@@ -1,4 +1,8 @@
-package surfdep.controllers;
+package edu.emory.physics.surfdep.controllers;
+
+import edu.emory.physics.surfdep.controllers.analysis.Average;
+import edu.emory.physics.surfdep.models.Deposition;
+import edu.emory.physics.surfdep.utils.LinearRegression;
 
 import java.awt.Color;
 import java.sql.ResultSet;
@@ -8,10 +12,6 @@ import java.util.HashMap;
 
 import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
-
-import surfdep.controllers.analysis.Average;
-import surfdep.models.Deposition;
-import surfdep.utils.LinearRegression;
 
 public class VisualizationManager {
 

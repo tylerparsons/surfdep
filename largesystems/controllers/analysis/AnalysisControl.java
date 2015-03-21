@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 
 import surfdep.largesystems.controllers.DataManager;
-import surfdep.largesystems.controllers.DepositionControl;
+import surfdep.largesystems.controllers.trials.DepositionControl;
 import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.VisualizationManager.Point;
 import surfdep.largesystems.utils.InputDialog;

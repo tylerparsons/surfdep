@@ -1,10 +1,12 @@
-package surfdep.largesystems.controllers;
+package surfdep.largesystems.controllers.trials;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.opensourcephysics.controls.AbstractSimulation;
 
+import surfdep.largesystems.controllers.DataManager;
+import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.supplier.AsyncSupplier;
 import surfdep.largesystems.models.BallisticDiffusionModel;
 import surfdep.largesystems.models.LargeSystemDeposition;

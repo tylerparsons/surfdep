@@ -9,7 +9,7 @@ package surfdep.largesystems.models;
  * surface deposition model based on
  * the bonding of atoms. 
  */
-public class BallisticDeposition extends LargeSystemDeposition {
+public class BallisticDeposition extends Deposition {
 
 	public BallisticDeposition() {
 		super();

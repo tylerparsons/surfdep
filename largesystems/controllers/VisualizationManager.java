@@ -10,7 +10,7 @@ import org.opensourcephysics.frames.LatticeFrame;
 import org.opensourcephysics.frames.PlotFrame;
 
 import surfdep.largesystems.controllers.analysis.Average;
-import surfdep.largesystems.models.LargeSystemDeposition;
+import surfdep.largesystems.models.Deposition;
 import surfdep.largesystems.utils.LinearRegression;
 
 public class VisualizationManager {
@@ -119,7 +119,7 @@ public class VisualizationManager {
 	/**
 	 * Sets up visualizations if they are enabled
 	 */
-	public void initVisuals(LargeSystemDeposition model) {
+	public void initVisuals(Deposition model) {
 		
 		lattice.addDrawable(model);
 		lattice.setVisible(true);
@@ -152,14 +152,14 @@ public class VisualizationManager {
 	 * 		   total run time for each model
 	 * 		-> plots ln(w/L^(1/2)) vs ln (t/L^(1/2)) 
 	 */
-	public void plotAllModels(ArrayList<LargeSystemDeposition> models) {
+	public void plotAllModels(ArrayList<Deposition> models) {
 		
 		/** width_vs_time **/
 		width_vs_time.clearData();
 		for (int i = 0; i < models.size(); i++) {
 			
 			//plot entire width array, set color
-			LargeSystemDeposition m = models.get(i);
+			Deposition m = models.get(i);
 			width_vs_time.setMarkerColor(i, colors[i%colors.length]);
 			long time = m.getTime();
 			
@@ -259,13 +259,13 @@ public class VisualizationManager {
 		width_vs_length.clearDrawables();
 		
 		// Parse generic Data parameter to plot points
-		if (data.get(0) instanceof LargeSystemDeposition) {
+		if (data.get(0) instanceof Deposition) {
 		
 			plotPointList(
 				data,
 				width_vs_length,
 				(int i, Data point) -> {
-					LargeSystemDeposition lsd = (LargeSystemDeposition)point;
+					Deposition lsd = (Deposition)point;
 					return new Point(i, Math.log(lsd.getLength()), lsd.getSaturatedLnw_avg());
 				}
 			);

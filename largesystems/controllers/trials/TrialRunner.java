@@ -36,32 +36,38 @@ public class TrialRunner {
 			e.printStackTrace();
 			return;
 		}
-		final HashMap<String, Double> params = new HashMap<String, Double>();
 		
+		final HashMap<String, Double> numericParams = new HashMap<>();
+		HashMap<String, String> textParams = new HashMap<>();
 		while (in.hasNext()) {
 			String line = in.nextLine();
 			System.out.println(line);
 			String[] kvPair = line.split("\t");
-			params.put(kvPair[0], Double.parseDouble(kvPair[1]));
+			try {
+				numericParams.put(kvPair[0], Double.parseDouble(kvPair[1]));
+			} catch (NumberFormatException nfe) {
+				textParams.put(kvPair[0], kvPair[1]);
+			}
 		}
 		in.close();
 		
 		// Create control
-		final DepositionControl control = new DepositionControl();
+		String modelType = textParams.get("modelType");
+		final DepositionControl control = new DepositionControl(modelType);
 		
 		// Determine number of trials to run
-		DepositionControl.remainingTrials = params.remove("numTrials").intValue();
+		DepositionControl.remainingTrials = numericParams.remove("numTrials").intValue();
 		// Grab other params
-		DepositionControl.clearMod = params.remove("clearMod").intValue();
-		DepositionControl.plotAllMod = params.remove("plotAllMod").intValue();
-		if (params.containsKey("averageFactor"))
-			DepositionControl.averageFactor = params.remove("averageFactor").doubleValue();
+		DepositionControl.clearMod = numericParams.remove("clearMod").intValue();
+		DepositionControl.plotAllMod = numericParams.remove("plotAllMod").intValue();
+		if (numericParams.containsKey("averageFactor"))
+			DepositionControl.averageFactor = numericParams.remove("averageFactor").doubleValue();
 		
 		// Instantiate AsyncSupplier to provide input for model analysis
 		AsyncSupplier<HashMap<String, String>> supplier;
 		try {
 			// Use explicity defined input parameters if possible
-			supplier = new CachedInputSupplier(control, params);
+			supplier = new CachedInputSupplier(control, numericParams);
 		} catch (IllegalArgumentException e) {
 			supplier = new InputDialogSupplier();
 		}
@@ -71,7 +77,7 @@ public class TrialRunner {
 		SimulationControl.createApp(control);
 		
 		// Run trials recursively
-		control.initialize(params);
+		control.initialize(numericParams);
 		control.setAnalysisCallback( () -> {
 			
 			if (--DepositionControl.remainingTrials > 0) {
@@ -83,7 +89,7 @@ public class TrialRunner {
 					control.clearMemory();
 				}
 				
-				control.initialize(params);
+				control.initialize(numericParams);
 				control.startSimulation();
 			}
 			

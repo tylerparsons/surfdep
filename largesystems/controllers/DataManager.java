@@ -15,7 +15,7 @@ import java.util.Scanner;
 
 import org.opensourcephysics.display.DrawingFrame;
 
-import surfdep.largesystems.models.LargeSystemDeposition;
+import surfdep.largesystems.models.Deposition;
 import surfdep.largesystems.utils.MySQLClient;
 
 /**
@@ -191,7 +191,7 @@ public class DataManager {
 		}, paramMaps);
 	}
 	
-	public void saveToTxt(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+	public void saveToTxt(Deposition model, HashMap<String, Double> addlParams) {
 		printSafely(txt, new Printer() {
 			@Override
 			public void print() throws IOException {
@@ -222,7 +222,7 @@ public class DataManager {
 		});
 	}
 	
-	public void saveToCSV(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+	public void saveToCSV(Deposition model, HashMap<String, Double> addlParams) {
 		printSafely(csv, new Printer() {
 			@Override
 			public void print() throws IOException {
@@ -262,7 +262,7 @@ public class DataManager {
 		}
 	}
 	
-	public void saveAll(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+	public void saveAll(Deposition model, HashMap<String, Double> addlParams) {
 		saveToTxt(model, addlParams);
 		saveToCSV(model, addlParams);
 		saveToDB(model, addlParams);
@@ -336,7 +336,7 @@ public class DataManager {
 		return raw;
 	}
 	
-	public void saveToDB(LargeSystemDeposition model, HashMap<String, Double> addlParams) {
+	public void saveToDB(Deposition model, HashMap<String, Double> addlParams) {
 		
 		// Add trial param
 		addlParams.put("trial", (double)outputId);
@@ -366,7 +366,7 @@ public class DataManager {
 		
 	}
 	
-	public void updateW_avg(LargeSystemDeposition model) {
+	public void updateW_avg(Deposition model) {
 		
 		// Query current average value
 		
@@ -433,7 +433,7 @@ public class DataManager {
 		
 	}
 	
-	public void updateScaledW_avg(LargeSystemDeposition model, double w_avg, int S) {
+	public void updateScaledW_avg(Deposition model, double w_avg, int S) {
 		
 		// Query current average value
 		
@@ -500,11 +500,11 @@ public class DataManager {
 		
 	}
 	
-	public void updateScaledW_avg(LargeSystemDeposition model) {
+	public void updateScaledW_avg(Deposition model) {
 		updateScaledW_avg(model, model.getWidth(model.getScaledTime()), 1);
 	}
 
-	public void updateAverages(LargeSystemDeposition model) {
+	public void updateAverages(Deposition model) {
 
 		// Look for current average value
 		String whereClause = 

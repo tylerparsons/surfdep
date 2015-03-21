@@ -8,8 +8,8 @@ import org.opensourcephysics.controls.AbstractSimulation;
 import surfdep.largesystems.controllers.DataManager;
 import surfdep.largesystems.controllers.VisualizationManager;
 import surfdep.largesystems.controllers.supplier.AsyncSupplier;
-import surfdep.largesystems.models.BallisticDiffusionModel;
-import surfdep.largesystems.models.LargeSystemDeposition;
+import surfdep.largesystems.models.Deposition;
+import surfdep.largesystems.models.DepositionFactory;
 import surfdep.largesystems.utils.AlertDialog;
 import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
 import surfdep.largesystems.utils.LinearRegression;
@@ -26,10 +26,12 @@ import surfdep.largesystems.utils.LinearRegression.Function;
  */
 public class DepositionControl extends AbstractSimulation {
 
-	private ArrayList<LargeSystemDeposition> models;
-	private LargeSystemDeposition model;
-	private LinearRegression lnw_vs_lnL;
+	private Deposition model;
+	private ArrayList<Deposition> models;
+	private DepositionFactory depositionFactory;
+	private String modelType;
 	
+	private LinearRegression lnw_vs_lnL;
 	private DataManager dataManager;
 	private VisualizationManager visManager;
 
@@ -66,11 +68,13 @@ public class DepositionControl extends AbstractSimulation {
 	/**
 	 * Constructor
 	 */
-	public DepositionControl() {
+	public DepositionControl(String modelType) {
 		
 		//set up visualizations
+		this.modelType = modelType;
+		depositionFactory = new DepositionFactory();
+		models = new ArrayList<Deposition>();
 		model = instantiateModel();
-		models = new ArrayList<LargeSystemDeposition>();
 		
 		visManager = new VisualizationManager(model.getClass().getName());
 		dataManager = new DataManager(
@@ -142,11 +146,11 @@ public class DepositionControl extends AbstractSimulation {
 	 * Checks if averageFactor has been specified,
 	 * passing it as a param if necessary.
 	 */
-	public LargeSystemDeposition instantiateModel() {
+	public Deposition instantiateModel() {
 		if (averageFactor != 0)
-			return new BallisticDiffusionModel(averageFactor);
+			return depositionFactory.createDeposition(modelType, averageFactor);
 		else
-			return new BallisticDiffusionModel();
+			return depositionFactory.createDeposition(modelType);
 	}
 	
 	
@@ -309,7 +313,7 @@ public class DepositionControl extends AbstractSimulation {
 	
 	private double calculateAverageBeta() {
 		double sum = 0;
-		for(LargeSystemDeposition m: models) {
+		for(Deposition m: models) {
 			sum += m.getBeta();
 		}
 		return sum/(double)models.size();
@@ -338,7 +342,7 @@ public class DepositionControl extends AbstractSimulation {
 		visManager.logPlotWidthVsLength(models, lnw_vs_lnL);
 	}
 	
-	public boolean exists(LargeSystemDeposition m) {
+	public boolean exists(Deposition m) {
 		return models.contains(m);
 	}
 	

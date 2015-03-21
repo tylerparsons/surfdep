@@ -27,7 +27,7 @@ import surfdep.largesystems.utils.EmbeddedDBArray.DBOperationCallback;
 import surfdep.largesystems.utils.LinearRegression;
 
 
-public abstract class LargeSystemDeposition implements Drawable {
+public abstract class Deposition implements Drawable {
 
 
 /********************
@@ -133,7 +133,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	/**S
 	 * super() must be called in all constructor overloads!
 	 */
-	public LargeSystemDeposition() {
+	public Deposition() {
 		initParams();
 		setDefaultTimeScale(1);
 	}
@@ -142,7 +142,7 @@ public abstract class LargeSystemDeposition implements Drawable {
 	 * Constructs a LargeSystemDeposition with h_avg time scaling.
 	 * super() must be called in all constructor overloads!
 	 */
-	public LargeSystemDeposition(double averageFactor) {
+	public Deposition(double averageFactor) {
 		// Set default parameters
 		initParams();
 		// Store averageFactor

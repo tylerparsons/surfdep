@@ -274,7 +274,10 @@ public class VisualizationManager {
 		width_vs_length.clearDrawables();
 		
 		// Parse generic Data parameter to plot points
-		if (data.get(0) instanceof Deposition) {
+		if (data.size() == 0) {
+			return;
+		}
+		else if (data.get(0) instanceof Deposition) {
 		
 			plotPointList(
 				data,

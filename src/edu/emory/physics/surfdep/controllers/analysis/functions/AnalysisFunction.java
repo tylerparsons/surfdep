@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package edu.emory.physics.surfdep.controllers.analysis;
+package edu.emory.physics.surfdep.controllers.analysis.functions;
 
+import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.utils.InputDialog;
 
 import java.util.HashMap;

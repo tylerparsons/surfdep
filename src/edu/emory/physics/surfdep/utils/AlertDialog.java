@@ -21,6 +21,10 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+/**
+ * @deprecated Use JOPtionPane instead
+ * @author Tyler Parsons
+ */
 public class AlertDialog extends JFrame {
 
 	/**

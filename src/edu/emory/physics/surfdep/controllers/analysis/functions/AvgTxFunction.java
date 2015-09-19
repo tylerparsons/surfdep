@@ -16,7 +16,6 @@
 package edu.emory.physics.surfdep.controllers.analysis.functions;
 
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.controllers.analysis.functions.CalcAvgFunction;
@@ -32,10 +31,8 @@ public class AvgTxFunction extends CalcAvgFunction {
 	}
 
 	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			calcAvgs(new ModelGroupIdentifier(input), DepositionControl.T_X_INPUT_KEYS);
-		};
+	public void accept(HashMap<String, String> input) {
+		calcAvgs(new ModelGroupIdentifier(input), DepositionControl.T_X_INPUT_KEYS);
 	}
 		
 }

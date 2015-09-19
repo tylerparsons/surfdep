@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.utils.LinearRegression;
@@ -39,19 +38,17 @@ public class CalcSlopeFunction extends SavingAnalysisFunction {
 	}
 	
 	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			double lnt1 = Double.parseDouble(input.remove("ln t1"));
-			double lnt2 = Double.parseDouble(input.remove("ln t2"));
-			new SavingAnalysisFunction(title, control) {
-				@Override
-				public Consumer<HashMap<String, String>> createAnalyzer() {
-					return (HashMap<String, String> in) -> {
-						calcSlope(new ModelGroupIdentifier(input), lnt1, lnt2);
-					};
-				}
-			}.analyze();
-		};
+	public void accept(HashMap<String, String> input) {
+		
+		double lnt1 = Double.parseDouble(input.remove("ln t1"));
+		double lnt2 = Double.parseDouble(input.remove("ln t2"));
+		new SavingAnalysisFunction(title, control) {
+			@Override
+			public void accept(HashMap<String, String> in) {
+				calcSlope(new ModelGroupIdentifier(input), lnt1, lnt2);
+			}
+		}.analyze();
+		
 	}
 
 	/**

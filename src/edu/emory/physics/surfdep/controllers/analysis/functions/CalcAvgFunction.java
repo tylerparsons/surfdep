@@ -18,7 +18,6 @@ package edu.emory.physics.surfdep.controllers.analysis.functions;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.controllers.analysis.Average;
@@ -43,21 +42,17 @@ public class CalcAvgFunction extends SavingAnalysisFunction {
 	}
 	
 	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			// Determine parameters to average
-			final String[] paramNames = input.remove("Parameter names").split(",");
-			// Launch analysis function to identify models for which to
-			// compute average values for the given parameters
-			new AnalysisFunction(title, control) {
-				@Override
-				public Consumer<HashMap<String, String>> createAnalyzer() {
-					return (HashMap<String, String> in) -> {
-						calcAvgs(new ModelGroupIdentifier(in), paramNames);
-					};
-				}
-			}.analyze();
-		};
+	public void accept(HashMap<String, String> input) {
+		// Determine parameters to average
+		final String[] paramNames = input.remove("Parameter names").split(",");
+		// Launch analysis function to identify models for which to
+		// compute average values for the given parameters
+		new AnalysisFunction(title, control) {
+			@Override
+			public void accept(HashMap<String, String> in) {
+				calcAvgs(new ModelGroupIdentifier(in), paramNames);
+			}
+		}.analyze();
 	}
 	
 	/**

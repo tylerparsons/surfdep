@@ -54,7 +54,7 @@ public abstract class SavingAnalysisFunction extends AnalysisFunction {
 				ModelGroupIdentifier mgi = new ModelGroupIdentifier(input);
 				control.printToTxt("\n"+inputMessage);
 				control.saveData(inputMessage, mgi);
-				analyzer.accept(input);
+				accept(input);
 			}
 		);
 	}

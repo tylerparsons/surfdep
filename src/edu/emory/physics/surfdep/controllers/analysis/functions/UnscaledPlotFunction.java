@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.VisualizationManager;
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
@@ -28,7 +27,7 @@ import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 import edu.emory.physics.surfdep.utils.MySQLClient;
 
 /**
- * @author Tyler
+ * @author Tyler Parsons
  *
  */
 public class UnscaledPlotFunction extends AnalysisFunction {
@@ -49,6 +48,11 @@ public class UnscaledPlotFunction extends AnalysisFunction {
 			},
 			control
 		);
+	}
+
+	@Override
+	public void accept(HashMap<String, String> t) {
+		unscaledAvgWidthPlot(new ModelGroupIdentifier(t));
 	}
 	
 	/**
@@ -114,12 +118,6 @@ public class UnscaledPlotFunction extends AnalysisFunction {
 		// Relaunch control window
 		control.showControlWindow();		
 		
-	}
-
-	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) ->
-			unscaledAvgWidthPlot(new ModelGroupIdentifier(input));
 	}
 	
 }

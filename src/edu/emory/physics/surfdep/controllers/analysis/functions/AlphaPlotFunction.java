@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.VisualizationManager;
 import edu.emory.physics.surfdep.controllers.VisualizationManager.Point;
@@ -36,10 +35,8 @@ public class AlphaPlotFunction extends AnalysisFunction {
 	}
 	
 	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			alphaPlot(new ModelGroupIdentifier(input));
-		};
+	public void accept(HashMap<String, String> input) {
+		alphaPlot(new ModelGroupIdentifier(input));
 	}
 	
 	/**

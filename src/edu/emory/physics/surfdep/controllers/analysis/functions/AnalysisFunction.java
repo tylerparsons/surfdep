@@ -29,12 +29,11 @@ import java.util.function.Consumer;
  * 
  * @author Tyler Parsons
  */
-public abstract class AnalysisFunction {
+public abstract class AnalysisFunction implements Consumer<HashMap<String, String>> {
 		
 	protected String title;
 	protected String inputMessage;
 	protected String[] inputParams;
-	protected Consumer<HashMap<String, String>> analyzer;
 	protected AnalysisControl control;
 	
 	public AnalysisFunction(
@@ -47,7 +46,6 @@ public abstract class AnalysisFunction {
 		this.inputMessage = inputMessage;
 		this.inputParams = inputParams;
 		this.control = control;
-		this.analyzer = createAnalyzer();
 	}
 	
 	public AnalysisFunction(String title, AnalysisControl control) {
@@ -59,8 +57,6 @@ public abstract class AnalysisFunction {
 		);
 	}
 	
-	public abstract Consumer<HashMap<String, String>> createAnalyzer();
-	
 	/**
 	 * Create input dialog to enable user
 	 * specification of trials over which
@@ -71,7 +67,7 @@ public abstract class AnalysisFunction {
 		new InputDialog(
 			inputMessage,
 			inputParams,
-			(HashMap<String, String> input) -> analyzer.accept(input)
+			this
 		);
 		
 	}

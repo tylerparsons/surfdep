@@ -18,7 +18,6 @@ package edu.emory.physics.surfdep.controllers.analysis.functions;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.controllers.analysis.Average;
@@ -30,6 +29,11 @@ public class BetaPlotFunction extends AnalysisFunction {
 	
 	public BetaPlotFunction(AnalysisControl control) {
 		super(TITLE, control);
+	}
+
+	@Override
+	public void accept(HashMap<String, String> input) {
+		betaVsXPlot(new ModelGroupIdentifier(input));
 	}
 	
 	/**
@@ -79,12 +83,6 @@ public class BetaPlotFunction extends AnalysisFunction {
 		// Relaunch control window
 		control.showControlWindow();
 		
-	}
-
-	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> 
-			betaVsXPlot(new ModelGroupIdentifier(input));
 	}
 	
 }

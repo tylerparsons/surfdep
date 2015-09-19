@@ -19,7 +19,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.VisualizationManager;
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
@@ -47,6 +46,21 @@ public class ScaledPlotFunction extends AnalysisFunction {
 		);
 	}
 	
+	@Override
+	public void accept(HashMap<String, String> input) {
+		String zStr; final double z;
+		if ((zStr = input.remove("z")) != null && !zStr.equals(""))
+			z = Double.parseDouble(zStr);
+		else
+			z = AnalysisControl.Z_DEFAULT;
+		new SavingAnalysisFunction(title, control) {
+			@Override
+			public void accept(HashMap<String, String> in) {
+					scaledAvgWidthPlot(new ModelGroupIdentifier(in), z);
+			}
+		}.analyze();
+	}
+
 	/**
 	 * Initiates an {@link InputDialog} to request
 	 * parameters and then displays a scaled average
@@ -107,25 +121,6 @@ public class ScaledPlotFunction extends AnalysisFunction {
 		// Relaunch control window
 		control.showControlWindow();		
 		
-	}
-
-	@Override
-	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			String zStr; final double z;
-			if ((zStr = input.remove("z")) != null && !zStr.equals(""))
-				z = Double.parseDouble(zStr);
-			else
-				z = AnalysisControl.Z_DEFAULT;
-			new SavingAnalysisFunction(title, control) {
-				@Override
-				public Consumer<HashMap<String, String>> createAnalyzer() {
-					return (HashMap<String, String> in) -> {
-						scaledAvgWidthPlot(new ModelGroupIdentifier(in), z);
-					};
-				}
-			}.analyze();
-		};
 	}
 	
 }

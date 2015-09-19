@@ -18,6 +18,8 @@ package edu.emory.physics.surfdep.controllers.analysis.functions;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.function.Consumer;
 
 import edu.emory.physics.surfdep.controllers.VisualizationManager;
 import edu.emory.physics.surfdep.controllers.VisualizationManager.Point;
@@ -26,17 +28,18 @@ import edu.emory.physics.surfdep.utils.LinearRegression;
 import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 
 public class AlphaPlotFunction extends AnalysisFunction {
-
-	protected static AnalysisControl control;	
 	
-	public AlphaPlotFunction() {
-		super(
-			(control = AnalysisControl.getSingleton()).createSavingAnalyzer(
-				"alpha plot", (ModelGroupIdentifier mgi) -> {
-					alphaPlot(mgi);
-				}
-			)
-		);
+	public final static String TITLE = "alpha plot";
+	
+	public AlphaPlotFunction(AnalysisControl control) {
+		super(TITLE, control);
+	}
+	
+	@Override
+	public Consumer<HashMap<String, String>> createAnalyzer() {
+		return (HashMap<String, String> input) -> {
+			alphaPlot(new ModelGroupIdentifier(input));
+		};
 	}
 	
 	/**
@@ -48,7 +51,7 @@ public class AlphaPlotFunction extends AnalysisFunction {
 	 * 
 	 * @param mgi A {@link ModelGroupIdentifier}
 	 */
-	protected static void alphaPlot(ModelGroupIdentifier mgi) {
+	protected void alphaPlot(ModelGroupIdentifier mgi) {
 		
 		ResultSet data = control.getDb().query(
 			"SELECT L, lnw_avg FROM " +
@@ -107,8 +110,8 @@ public class AlphaPlotFunction extends AnalysisFunction {
 		}
 
 		// Relaunch control window
-		control.initControlWindow();
+		control.showControlWindow();
 		
-	}	
+	}
 	
 }

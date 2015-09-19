@@ -25,40 +25,45 @@ import edu.emory.physics.surfdep.controllers.analysis.Average;
 import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 import edu.emory.physics.surfdep.utils.MySQLClient;
 
-public class CalcAvgFunction extends AnalysisFunction {
+public class CalcAvgFunction extends SavingAnalysisFunction {
 	
-	protected static AnalysisControl control;
-	
-	protected static Consumer<HashMap<String, String>> ANALYZER = 
-		(HashMap<String, String> input) -> {
-		// Run average for the given parameter
-		final String[] paramNames = input.get("Parameter names").split(",");
-		new AnalysisFunction(
-			(control = AnalysisControl.getSingleton()).createSavingAnalyzer("Calculate averages",
-				(ModelGroupIdentifier mgi) -> {
-					calcAvgs(mgi, paramNames);
-				}
-			)
-		).analyze();
-	};
-	
-	public CalcAvgFunction() {
+	public static final String TITLE = "calc avg";
+		
+	public CalcAvgFunction(AnalysisControl control) {
 		super(
+			TITLE,
 			"Enter valid parameter name ",
 			new String[] {"Parameter names"},
-			ANALYZER
+			control
 		);
-		control = AnalysisControl.getSingleton();
 	}
 	
-	protected CalcAvgFunction(Consumer<HashMap<String, String>> analyzer) {
-		super(analyzer);
+	public CalcAvgFunction(String title, AnalysisControl control) {
+		super(title, control);
+	}
+	
+	@Override
+	public Consumer<HashMap<String, String>> createAnalyzer() {
+		return (HashMap<String, String> input) -> {
+			// Determine parameters to average
+			final String[] paramNames = input.remove("Parameter names").split(",");
+			// Launch analysis function to identify models for which to
+			// compute average values for the given parameters
+			new AnalysisFunction(title, control) {
+				@Override
+				public Consumer<HashMap<String, String>> createAnalyzer() {
+					return (HashMap<String, String> in) -> {
+						calcAvgs(new ModelGroupIdentifier(in), paramNames);
+					};
+				}
+			}.analyze();
+		};
 	}
 	
 	/**
 	 * Calculates and displays a variable number of averages.
 	 */
-	protected static void calcAvgs(String title, ModelGroupIdentifier mgi, String ... paramNames) {
+	protected void calcAvgs(String title, ModelGroupIdentifier mgi, String ... paramNames) {
 		
 		HashMap<String, Double> data = new HashMap<>();
 		Average[] avgs = avg(mgi, paramNames);
@@ -72,18 +77,18 @@ public class CalcAvgFunction extends AnalysisFunction {
 		
 		control.saveData(title, data);
 		control.showMessage(result);
-		control.initControlWindow();
+		control.showControlWindow();
 		
 	}
 	
 	/**
 	 * Calculates and displays a variable number of averages.
 	 */
-	protected static void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
+	protected void calcAvgs(ModelGroupIdentifier mgi, String ... paramNames) {
 		calcAvgs("Calculate averages", mgi, paramNames);
 	}
 	
-	protected static Average[] avg(ModelGroupIdentifier mgi, String ... paramNames) {
+	protected Average[] avg(ModelGroupIdentifier mgi, String ... paramNames) {
 		
 		// Query averages for mgi
 		String[] avgKeys = new String[paramNames.length];
@@ -108,7 +113,7 @@ public class CalcAvgFunction extends AnalysisFunction {
 			results.first();
 			int count = results.getInt("count(*)");
 			for (int i = 0; i < avgs.length; i++)
-					avgs[i] = new Average(results.getDouble(avgKeys[i]), count);
+				avgs[i] = new Average(results.getDouble(avgKeys[i]), count);
 			
 		} catch (SQLException e) {
 			e.printStackTrace();

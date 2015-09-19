@@ -27,11 +27,15 @@ import edu.emory.physics.surfdep.utils.InputDialog;
 import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 import edu.emory.physics.surfdep.utils.MySQLClient;
 
-public class ScaledPlotFunction extends AnalysisFunction {
+/**
+ * @author Tyler
+ *
+ */
+public class UnscaledPlotFunction extends AnalysisFunction {
 	
-	public static final String TITLE = "scaled avg width plot";
-	
-	public ScaledPlotFunction(AnalysisControl control) {
+	public static final String TITLE = "unscaled avg width plot";
+
+	public UnscaledPlotFunction(AnalysisControl control) {
 		super(
 			TITLE,
 			AnalysisControl.DEFAULT_INPUT_MSG,
@@ -54,7 +58,7 @@ public class ScaledPlotFunction extends AnalysisFunction {
 	 *
 	 * @param z scaling exponent alpha/beta
 	 */
-	public void scaledAvgWidthPlot(ModelGroupIdentifier mgi, double z) {
+	public void unscaledAvgWidthPlot(ModelGroupIdentifier mgi) {
 		
 		// Setup plots
 		VisualizationManager visManager = control.getVisManager();
@@ -94,8 +98,11 @@ public class ScaledPlotFunction extends AnalysisFunction {
 				lengthList.add(lengths.getInt(1));
 			}
 			
+			// Scale axes
+			visManager.getWidthVsTime().limitAutoscaleX(-1, Double.NaN);
+			visManager.getWidthVsTime().limitAutoscaleY(0, Double.NaN);
 			// Delegate plotting to visManager
-			visManager.scaledAvgWidthPlot(lengthList, data, nPoints, z);
+			visManager.unscaledAvgWidthPlot(lengthList, data, nPoints);
 
 		} catch (SQLException sqle) {
 			sqle.printStackTrace();
@@ -111,21 +118,8 @@ public class ScaledPlotFunction extends AnalysisFunction {
 
 	@Override
 	public Consumer<HashMap<String, String>> createAnalyzer() {
-		return (HashMap<String, String> input) -> {
-			String zStr; final double z;
-			if ((zStr = input.remove("z")) != null && !zStr.equals(""))
-				z = Double.parseDouble(zStr);
-			else
-				z = AnalysisControl.Z_DEFAULT;
-			new SavingAnalysisFunction(title, control) {
-				@Override
-				public Consumer<HashMap<String, String>> createAnalyzer() {
-					return (HashMap<String, String> in) -> {
-						scaledAvgWidthPlot(new ModelGroupIdentifier(in), z);
-					};
-				}
-			}.analyze();
-		};
+		return (HashMap<String, String> input) ->
+			unscaledAvgWidthPlot(new ModelGroupIdentifier(input));
 	}
 	
 }

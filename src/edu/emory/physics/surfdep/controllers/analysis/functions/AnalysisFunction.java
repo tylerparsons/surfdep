@@ -21,43 +21,53 @@ import edu.emory.physics.surfdep.utils.InputDialog;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
+
 /**
  * Abstracts functionality for generating InputDialogs
  * and running callbacks into a single wrapper class
  * for all AnalysisControl functions.
  * 
- * @author Tyler
+ * @author Tyler Parsons
  */
-public class AnalysisFunction {
-	
+public abstract class AnalysisFunction {
+		
+	protected String title;
 	protected String inputMessage;
 	protected String[] inputParams;
 	protected Consumer<HashMap<String, String>> analyzer;
+	protected AnalysisControl control;
 	
 	public AnalysisFunction(
+		String title,
 		String inputMessage,
 		String[] inputParams,
-		Consumer<HashMap<String, String>> analyzer
+		AnalysisControl control
 	) {
+		this.title = title;
 		this.inputMessage = inputMessage;
 		this.inputParams = inputParams;
-		this.analyzer = analyzer;
+		this.control = control;
+		this.analyzer = createAnalyzer();
 	}
 	
-	public AnalysisFunction(Consumer<HashMap<String, String>> analyzer) {
+	public AnalysisFunction(String title, AnalysisControl control) {
 		this(
+			title,
 			AnalysisControl.DEFAULT_INPUT_MSG,
 			AnalysisControl.COMPLETE_MODEL_PARAMS,
-			analyzer
+			control
 		);
 	}
 	
+	public abstract Consumer<HashMap<String, String>> createAnalyzer();
+	
+	/**
+	 * Create input dialog to enable user
+	 * specification of trials over which
+	 * to run average.
+	 */
 	public void analyze() {
-		
-		// Create input dialog to enable user
-		// specification of trials over which
-		// to run average
-		
+
 		new InputDialog(
 			inputMessage,
 			inputParams,
@@ -65,5 +75,47 @@ public class AnalysisFunction {
 		);
 		
 	}
+	
+	public String getTitle() {
+		return title;
+	}
+		
+//	protected String inputMessage;
+//	protected String[] inputParams;
+//	protected Consumer<HashMap<String, String>> analyzer;
+//	
+//	public AnalysisFunction(
+//		String inputMessage,
+//		String[] inputParams,
+//		Consumer<HashMap<String, String>> analyzer
+//	) {
+//		this.inputMessage = inputMessage;
+//		this.inputParams = inputParams;
+//		this.analyzer = analyzer;
+//	}
+//	
+//	public AnalysisFunction(Consumer<HashMap<String, String>> analyzer) {
+//		this(
+//			AnalysisControl.DEFAULT_INPUT_MSG,
+//			AnalysisControl.COMPLETE_MODEL_PARAMS,
+//			analyzer
+//		);
+//	}
+//	
+//	public abstract Consumer<HashMap<String, String>> createAnalyzer();
+//	
+//	public void analyze() {
+//		
+//		// Create input dialog to enable user
+//		// specification of trials over which
+//		// to run average
+//		
+//		new InputDialog(
+//			inputMessage,
+//			inputParams,
+//			(HashMap<String, String> input) -> analyzer.accept(input)
+//		);
+//		
+//	}
 	
 }

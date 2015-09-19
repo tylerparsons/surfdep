@@ -15,23 +15,27 @@
  */
 package edu.emory.physics.surfdep.controllers.analysis.functions;
 
+import java.util.HashMap;
+import java.util.function.Consumer;
+
 import edu.emory.physics.surfdep.controllers.analysis.AnalysisControl;
 import edu.emory.physics.surfdep.controllers.analysis.functions.CalcAvgFunction;
 import edu.emory.physics.surfdep.controllers.trials.DepositionControl;
 import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 
 public class AvgTxFunction extends CalcAvgFunction {
-
-	protected static AnalysisControl control;
 	
-	public AvgTxFunction() {
-		super(
-			(control = AnalysisControl.getSingleton()).createSavingAnalyzer(
-				"avg t_x values", (ModelGroupIdentifier mgi) -> {
-					CalcAvgFunction.calcAvgs(mgi, DepositionControl.T_X_INPUT_KEYS);
-				}
-			)
-		);
+	public final static String TITLE = "avg t_x values";
+	
+	public AvgTxFunction(AnalysisControl control) {
+		super(TITLE, control);
 	}
-	
+
+	@Override
+	public Consumer<HashMap<String, String>> createAnalyzer() {
+		return (HashMap<String, String> input) -> {
+			calcAvgs(new ModelGroupIdentifier(input), DepositionControl.T_X_INPUT_KEYS);
+		};
+	}
+		
 }

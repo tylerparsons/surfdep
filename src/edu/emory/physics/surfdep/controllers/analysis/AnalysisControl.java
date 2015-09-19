@@ -22,33 +22,32 @@ import edu.emory.physics.surfdep.controllers.analysis.functions.AnalysisFunction
 import edu.emory.physics.surfdep.controllers.analysis.functions.AvgTxFunction;
 import edu.emory.physics.surfdep.controllers.analysis.functions.BetaPlotFunction;
 import edu.emory.physics.surfdep.controllers.analysis.functions.CalcAvgFunction;
+import edu.emory.physics.surfdep.controllers.analysis.functions.CalcSlopeFunction;
 import edu.emory.physics.surfdep.controllers.analysis.functions.ScaledPlotFunction;
+import edu.emory.physics.surfdep.controllers.analysis.functions.UnscaledPlotFunction;
+
+import edu.emory.physics.surfdep.utils.CredentialLoader;
 import edu.emory.physics.surfdep.utils.ModelGroupIdentifier;
 import edu.emory.physics.surfdep.utils.MySQLClient;
 
 import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.function.Consumer;
 
 import javax.swing.JOptionPane;
 
 /**
  * AnalysisControl.java
  * Created:	5 January 2015
- * @author Tyler
  * 
  * A GUI control used to run analysis
  * of the models and aggregate data.
  * Connects to the local MySQL database
  * to query and analyze past trial data.
+ * 
+ * @author Tyler Parsons
  */
 public class AnalysisControl {
-
-	/**
-	 * Singleton
-	 */
-	private static AnalysisControl singleton;
 	
 	/**
 	 * Bridge to the local MySQL database
@@ -76,7 +75,7 @@ public class AnalysisControl {
 	 * An array of descriptions of analysis functions
 	 * that this control can execute.
 	 */
-	protected String[] functionNames;
+	protected String[] functionTitles;
 	
 	/**
 	 * Name of models table.
@@ -141,8 +140,8 @@ public class AnalysisControl {
 	 *
 	 */
 	public class MutableInteger {
-		public int i;
-		public MutableInteger(int I) {i = I;}
+		public int value;
+		public MutableInteger(int v) {value = v;}
 	}
 	
 	
@@ -157,60 +156,60 @@ public class AnalysisControl {
 	public AnalysisControl(VisualizationManager vm) {
 		
 		visManager = vm;
-		db = MySQLClient.getSingleton("depositions", "bdm", "d3po$ition$");
+		
+		try {
+			
+			StringBuilder username = new StringBuilder();
+			StringBuilder password = new StringBuilder();
+			
+			CredentialLoader.load("db_credentials.txt", username, password);
+			
+			db = MySQLClient.getSingleton("depositions", username.toString(),
+														 password.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+			// Cannot continue program execution without a database connection
+			assert(false);
+		}
+		
 		dataManager = new DataManager(TXT_FILE_PATH);
-		
-	}
-	
-	public void init() {
-		
 		initAnalysisFunctions();
-		initControlWindow();
-		
-	}
-	
-	public Consumer<HashMap<String, String>> createSavingAnalyzer(
-		String title,
-		Consumer<ModelGroupIdentifier> analyzer
-	) {
-		return (HashMap<String, String> input) -> {
-			ModelGroupIdentifier mgi = new ModelGroupIdentifier(input);
-			dataManager.printToTxt("\n"+title);
-			saveData(title, mgi);
-			analyzer.accept(mgi);
-		};
 	}
 	
 	/**
 	 * Enumerates the analysis functions by adding
 	 * them to the function map.
 	 */
-	public void initAnalysisFunctions() {
+	private void initAnalysisFunctions() {
 		
-		// Function map
+		AnalysisFunction[] functionList = {
+			new CalcAvgFunction(this),
+			new ScaledPlotFunction(this),
+			new UnscaledPlotFunction(this),
+			new AvgTxFunction(this),
+			new CalcSlopeFunction(this),
+			new BetaPlotFunction(this),
+			new AlphaPlotFunction(this)
+		};
+		
+		// Function map for lookup of name by title
 		analysisFunctions = new LinkedHashMap<String, AnalysisFunction>();
-		
-		analysisFunctions.put("Calculate averages", new CalcAvgFunction());
-		analysisFunctions.put("Scaled avg width plot", new ScaledPlotFunction());
-		analysisFunctions.put("avg t_x values", new AvgTxFunction());
-		analysisFunctions.put("beta vs x plot", new BetaPlotFunction());
-		analysisFunctions.put("alpha plot", new AlphaPlotFunction());
-		
 		// String[] containing function names
-		functionNames = new String[analysisFunctions.size()];
+		functionTitles = new String[functionList.length];
 		
 		int i = 0;
-		for (String name: analysisFunctions.keySet()) {
-			functionNames[i++] = name;
+		for (AnalysisFunction function: functionList) {
+			analysisFunctions.put(function.getTitle(), function);
+			functionTitles[i++] = function.getTitle();
 		}
 		
-		storeFilenames(functionNames);
+		storeFilenames(functionTitles);
 		
 	}
 	
-	protected void storeFilenames(String[] titles) {
+	protected void storeFilenames(String[] functionTitles) {
 		if (filenames == null) filenames = new HashMap<>();
-		for (String title: titles) {
+		for (String title: functionTitles) {
 			filenames.put(
 				title, 
 				CSV_FILE_DIR+title.replaceAll("\\s", "_").toLowerCase()+".csv"
@@ -222,7 +221,7 @@ public class AnalysisControl {
 	 * Shows a JOptionPane allowing selection
 	 * and execution of all analysis functions.
 	 */
-	public void initControlWindow() {
+	public void showControlWindow() {
 		
 		Thread t = new Thread( () -> {
 				
@@ -230,7 +229,7 @@ public class AnalysisControl {
 			String functionName = (String)JOptionPane.showInputDialog(
 					null, "Select an analysis function",
 					"Analysis Control",JOptionPane.QUESTION_MESSAGE,
-					null,functionNames,"Calculate averages"
+					null,functionTitles,"Calculate averages"
 			);
 			
 			// Invoke callback
@@ -266,12 +265,12 @@ public class AnalysisControl {
 	}
 
 	public void saveData(String title, ModelGroupIdentifier mgi) {
-		HashMap<String, String> params = mgi.getInputParams();
+		HashMap<String, String> params = new HashMap<>(mgi.getInputParams());
 		// csv
-		dataManager.printToCSV(
-			filenames.get(title),
-			dataManager.getCSVOutput(params)
-		);
+//		dataManager.printToCSV(
+//			filenames.get(title),
+//			dataManager.getCSVOutput(params)
+//		);
 		// txt
 		params.put("sqlWhereClause", mgi.sqlWhereClause());
 		dataManager.saveToTxt(params);
@@ -279,12 +278,16 @@ public class AnalysisControl {
 	
 	public void saveData(String title, HashMap<String, Double> params) {
 		// csv
-		dataManager.printToCSV(
-			filenames.get(title),
-			dataManager.getCSVOutput(params)
-		);
+//		dataManager.printToCSV(
+//			filenames.get(title),
+//			dataManager.getCSVOutput(params)
+//		);
 		// txt
 		dataManager.saveToTxt(params);
+	}
+
+	public void printToTxt(String output) {
+		dataManager.printToTxt(output);
 	}
 	
 /***********
@@ -299,17 +302,12 @@ public class AnalysisControl {
 		return visManager;
 	}
 	
-	public static AnalysisControl getSingleton() {
-		return singleton;
-	}
-	
 /********
  * Main *
  ********/
 	
 	public static void main(String[] args) {
-		singleton = new AnalysisControl();
-		singleton.init();
+		new AnalysisControl().showControlWindow();
 	}
 	
 }
